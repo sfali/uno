@@ -1,4 +1,4 @@
-package com.alphasystem.game.uno.model.message
+package com.alphasystem.game.uno.model.request
 
 import io.circe.{Decoder, Encoder}
 

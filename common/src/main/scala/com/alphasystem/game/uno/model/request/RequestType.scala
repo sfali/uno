@@ -1,4 +1,4 @@
-package com.alphasystem.game.uno.model.message
+package com.alphasystem.game.uno.model.request
 
 import enumeratum.{CirceEnum, Enum, EnumEntry}
 import enumeratum.EnumEntry.Hyphencase
