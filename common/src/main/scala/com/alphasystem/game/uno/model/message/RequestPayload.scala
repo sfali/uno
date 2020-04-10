@@ -5,18 +5,18 @@ import io.circe._
 import io.circe.generic.auto._
 import io.circe.syntax._
 
-sealed trait MessagePayload
+sealed trait RequestPayload
 
-case object Empty extends MessagePayload
+case object Empty extends RequestPayload
 
-object MessagePayload {
-  implicit val MessageEnvelopeEncoder: Encoder[MessagePayload] =
+object RequestPayload {
+  implicit val MessageEnvelopeEncoder: Encoder[RequestPayload] =
     Encoder.instance {
       case command@Empty => command.asJson
     }
 
-  implicit val MessageEnvelopeDecoder: Decoder[MessagePayload] =
-    List[Decoder[MessagePayload]](
+  implicit val MessageEnvelopeDecoder: Decoder[RequestPayload] =
+    List[Decoder[RequestPayload]](
       Decoder[Empty.type].widen
     ).reduceLeft(_ or _)
 }

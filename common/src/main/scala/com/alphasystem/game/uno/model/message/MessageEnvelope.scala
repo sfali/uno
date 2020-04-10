@@ -2,7 +2,7 @@ package com.alphasystem.game.uno.model.message
 
 import io.circe.{Decoder, Encoder}
 
-case class MessageEnvelope(playerId: Int, messageType: MessageType, payload: MessagePayload)
+case class MessageEnvelope(playerId: Int, messageType: RequestType, payload: RequestPayload)
 
 object MessageEnvelope {
   implicit val MessageEnvelopeDecoder: Decoder[MessageEnvelope] =
