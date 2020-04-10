@@ -10,12 +10,12 @@ sealed trait RequestPayload
 case object Empty extends RequestPayload
 
 object RequestPayload {
-  implicit val MessageEnvelopeEncoder: Encoder[RequestPayload] =
+  implicit val RequestPayloadEncoder: Encoder[RequestPayload] =
     Encoder.instance {
       case command@Empty => command.asJson
     }
 
-  implicit val MessageEnvelopeDecoder: Decoder[RequestPayload] =
+  implicit val RequestPayloadDecoder: Decoder[RequestPayload] =
     List[Decoder[RequestPayload]](
       Decoder[Empty.type].widen
     ).reduceLeft(_ or _)
