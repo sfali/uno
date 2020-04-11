@@ -21,8 +21,6 @@ object Dependencies {
   val Common = Seq(
     // These libraries are added to all modules via the `Common` AutoPlugin
     libraryDependencies ++= Seq(
-      ComTypesafeAkka     %% "akka-actor-typed"    % AkkaVersion,
-      ComTypesafeAkka     %% "akka-stream-typed"   % AkkaVersion,
       ComTypesafeAkka     %% "akka-http"           % AkkaHttpVersion,
       IoCirce             %% "circe-core"          % CirceVersion,
       IoCirce             %% "circe-generic"       % CirceVersion,
@@ -37,10 +35,18 @@ object Dependencies {
     )
   )
 
+  val Server = Seq(
+    libraryDependencies ++= Seq(
+      ComTypesafeAkka     %% "akka-actor-typed"            % AkkaVersion,
+      ComTypesafeAkka     %% "akka-stream-typed"           % AkkaVersion,
+      ComTypesafeAkka     %% "akka-cluster-sharding-typed" % AkkaVersion
+    )
+  )
+
   val Client = Seq (
     libraryDependencies ++= Seq(
-      "org.scalafx"    %% "scalafx"    % "12.0.2-R18",
-      "org.controlsfx" %  "controlsfx" % "11.0.1"
+      "org.scalafx"      %% "scalafx"     % "12.0.2-R18",
+      "org.controlsfx"   %  "controlsfx"  % "11.0.1"
     )
   )
 }

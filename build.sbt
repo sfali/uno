@@ -2,7 +2,7 @@ import Dependencies._
 
 lazy val common = createProject("common", "common")
 
-lazy val server = createProject("server", "server")
+lazy val server = createProject("server", "server", Server)
   .aggregate(common)
   .dependsOn(common)
   .enablePlugins(JavaAppPackaging)
