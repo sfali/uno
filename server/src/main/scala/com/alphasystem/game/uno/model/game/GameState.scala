@@ -16,12 +16,7 @@ case class GameState(id: Int,
 
   def hasMinimumCapacity: Boolean = numOfPlayer >= MinNumberOfPlayers
 
-  def addPlayer(name: String): GameState = {
-    val player =
-      if (numOfPlayer == 0) Player(0, name, owner = true)
-      else Player(numOfPlayer, name)
-    copy(players = players :+ player)
-  }
+  def addPlayer(name: String): GameState = copy(players = players :+ Player(numOfPlayer, name))
 
   def player(id: Int): Player = players(id)
 

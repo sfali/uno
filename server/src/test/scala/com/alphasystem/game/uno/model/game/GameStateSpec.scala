@@ -20,7 +20,7 @@ class GameStateSpec
   }
 
   "Add players in the game" in {
-    var players = createPlayer(0, owner = true) :: Nil
+    var players = createPlayer(0) :: Nil
     gameState = gameState.addPlayer("Player1")
     gameState.players.toList shouldBe players
     gameState.numOfPlayer shouldBe 1
@@ -101,7 +101,7 @@ class GameStateSpec
     gameState.currentPlayerId shouldBe 0
   }
 
-  private def createPlayer(id: Int, points: Int = 0, owner: Boolean = false) =
-    Player(id, s"Player${id + 1}", points, owner)
+  private def createPlayer(id: Int, points: Int = 0) =
+    Player(id, s"Player${id + 1}", points)
 
 }
