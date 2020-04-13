@@ -11,12 +11,14 @@ object Dependencies {
   private val AkkaHttpCirceVersion = "1.31.0"
   private val ScalatestVersion = "3.3.0-SNAP2"
   private val ScalacheckVersion = "1.14.3"
+  private val LogbackVersion = "1.2.3"
   private val ComTypesafeAkka = "com.typesafe.akka"
   private val IoCirce = "io.circe"
   private val ComBeachape = "com.beachape"
   private val DeHeikoseeberger = "de.heikoseeberger"
   private val OrgScalatest = "org.scalatest"
   private val OrgScalacheck = "org.scalacheck"
+  private val ChQosLogback = "ch.qos.logback"
 
   val Common = Seq(
     // These libraries are added to all modules via the `Common` AutoPlugin
@@ -28,6 +30,7 @@ object Dependencies {
       ComBeachape         %% "enumeratum"          % EnumeratumVersion,
       ComBeachape         %% "enumeratum-circe"    % EnumeratumCirceVersion,
       DeHeikoseeberger    %% "akka-http-circe"     % AkkaHttpCirceVersion,
+      ChQosLogback        %  "logback-classic"     % LogbackVersion,
       ComTypesafeAkka     %% "akka-stream-testkit" % AkkaVersion              % Test,
       ComTypesafeAkka     %% "akka-http-testkit"   % AkkaHttpVersion          % Test,
       OrgScalatest        %% "scalatest"           % ScalatestVersion         % Test,
@@ -39,7 +42,8 @@ object Dependencies {
     libraryDependencies ++= Seq(
       ComTypesafeAkka     %% "akka-actor-typed"            % AkkaVersion,
       ComTypesafeAkka     %% "akka-stream-typed"           % AkkaVersion,
-      ComTypesafeAkka     %% "akka-cluster-sharding-typed" % AkkaVersion
+      ComTypesafeAkka     %% "akka-cluster-sharding-typed" % AkkaVersion,
+      ComTypesafeAkka     %% "akka-actor-testkit-typed"    % AkkaVersion      % Test
     )
   )
 

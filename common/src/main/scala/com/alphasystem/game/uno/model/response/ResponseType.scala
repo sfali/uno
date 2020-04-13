@@ -10,4 +10,8 @@ object ResponseType extends Enum[ResponseType] with CirceEnum[ResponseType] {
 
   final case object None extends ResponseType
 
+  final case object NewPlayerJoined extends ResponseType
+
+  final case object GameJoined extends ResponseType
+
 }
