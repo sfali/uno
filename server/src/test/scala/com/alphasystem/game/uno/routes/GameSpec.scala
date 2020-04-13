@@ -85,7 +85,7 @@ class GameSpec
     val player2 = players(1)
     WS(uri(player2.name), probe2.flow) ~> gameRoute ~> check {
       validateGameJoined(probe2, player2, player1 :: Nil)
-      validatePlayerJoined(probe1, player1.id, player2)
+      validatePlayerJoined(probe1, player1.position, player2)
     }
 
     // Player3 join the game
@@ -93,8 +93,8 @@ class GameSpec
     val player3 = players(2)
     WS(uri(player3.name), probe3.flow) ~> gameRoute ~> check {
       validateGameJoined(probe3, player3, player1 :: player2 :: Nil)
-      validatePlayerJoined(probe1, player1.id, player3)
-      validatePlayerJoined(probe2, player2.id, player3)
+      validatePlayerJoined(probe1, player1.position, player3)
+      validatePlayerJoined(probe2, player2.position, player3)
     }
 
 
@@ -103,9 +103,9 @@ class GameSpec
     val player4 = players(3)
     WS(uri(player4.name), probe4.flow) ~> gameRoute ~> check {
       validateGameJoined(probe4, player4, player1 :: player2 :: player3 :: Nil)
-      validatePlayerJoined(probe1, player1.id, player4)
-      validatePlayerJoined(probe2, player2.id, player4)
-      validatePlayerJoined(probe3, player3.id, player4)
+      validatePlayerJoined(probe1, player1.position, player4)
+      validatePlayerJoined(probe2, player2.position, player4)
+      validatePlayerJoined(probe3, player3.position, player4)
     }
 
     // Player5 join the game
@@ -113,17 +113,17 @@ class GameSpec
     val player5 = players(4)
     WS(uri(player5.name), probe5.flow) ~> gameRoute ~> check {
       validateGameJoined(probe5, player5, player1 :: player2 :: player3 :: player4 :: Nil)
-      validatePlayerJoined(probe1, player1.id, player5)
-      validatePlayerJoined(probe2, player2.id, player5)
-      validatePlayerJoined(probe3, player3.id, player5)
-      validatePlayerJoined(probe4, player4.id, player5)
+      validatePlayerJoined(probe1, player1.position, player5)
+      validatePlayerJoined(probe2, player2.position, player5)
+      validatePlayerJoined(probe3, player3.position, player5)
+      validatePlayerJoined(probe4, player4.position, player5)
     }
   }
 
   private def validateGameJoined(probe: WSProbe,
                                  player: Player,
                                  otherPlayers: List[Player] = Nil): Unit = {
-    val responseEnvelope = ResponseEnvelope(player.id, ResponseType.GameJoined, PlayerJoined(player, otherPlayers))
+    val responseEnvelope = ResponseEnvelope(player.position, ResponseType.GameJoined, PlayerJoined(player, otherPlayers))
     probe.expectMessage(responseEnvelope.asJson.noSpaces)
   }
 

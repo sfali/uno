@@ -31,12 +31,12 @@ class GameBehavior private(context: ActorContext[Command],
         val otherPlayers = state.players.toList
         state = state.addPlayer(name)
         val player = state.player(state.numOfPlayer - 1)
-        playerToActorRefs += player.id -> replyTo
+        playerToActorRefs += player.position -> replyTo
         playerToActorRefs
           .foreach {
             case (id, actorRef) =>
               val event =
-                if (id == player.id)
+                if (id == player.position)
                   ResponseEvent(ResponseEnvelope(id, ResponseType.GameJoined, PlayerJoined(player, otherPlayers)))
                 else
                   ResponseEvent(ResponseEnvelope(id, ResponseType.NewPlayerJoined, PlayerJoined(player)))
