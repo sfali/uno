@@ -7,12 +7,12 @@ sealed abstract class Color(override val value: Int, hexValue: String) extends I
   /**
    * Contains all the cards except "WildDrawFour"
    */
-  val firstSuite: IndexedSeq[Card] = Card.values.dropRight(2)
+  val firstSuite: IndexedSeq[CardEntry] = CardEntry.values.dropRight(2)
 
   /**
    * Contains all the cards except "Zero" and  "Wild"
    */
-  val secondSuite: IndexedSeq[Card] = Card.values.dropRight(2).drop(1)
+  val secondSuite: IndexedSeq[CardEntry] = CardEntry.values.dropRight(2).drop(1)
 }
 
 object Color extends IntEnum[Color] with IntCirceEnum[Color] {
@@ -27,9 +27,9 @@ object Color extends IntEnum[Color] with IntCirceEnum[Color] {
   final case object Yellow extends Color(4, "#FFFF00")
 
   final case object Symbol extends Color(value = 5, hexValue = "#000000") {
-    override val firstSuite: IndexedSeq[Card] = (1 to 4).map(_ => Card.Wild)
+    override val firstSuite: IndexedSeq[CardEntry] = (1 to 4).map(_ => CardEntry.Wild)
 
-    override val secondSuite: IndexedSeq[Card] = (1 to 4).map(_ => Card.WildDrawFour)
+    override val secondSuite: IndexedSeq[CardEntry] = (1 to 4).map(_ => CardEntry.WildDrawFour)
   }
 
 }
