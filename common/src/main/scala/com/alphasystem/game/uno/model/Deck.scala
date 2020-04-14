@@ -20,7 +20,7 @@ class Deck(initialCards: List[Card]) {
   }
 
   def distributeCards(playerIds: List[Int]): Map[Int, List[Card]] = {
-    shuffle()
+    shuffle(50)
     var cards = Map.empty[Int, List[Card]].withDefaultValue(Nil)
     (1 to MaxCards)
       .foreach {
