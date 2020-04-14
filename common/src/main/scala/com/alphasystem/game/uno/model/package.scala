@@ -4,16 +4,16 @@ package object model {
 
   val MaxCards: Int = 7
 
-  private[model] def buildDeck(): List[CardWrapper] = {
+  private[model] def buildDeck(): List[Card] = {
     val allCards =
       Color
         .values
-        .foldLeft(List[CardWrapper]()) {
+        .foldLeft(List[Card]()) {
           (ls, color) =>
             val cards =
               (color.firstSuite.toList ::: color.secondSuite.toList)
                 .map {
-                  card => CardWrapper(0, color, card)
+                  card => Card(0, color, card)
                 }
             ls ::: cards
         }
@@ -25,7 +25,7 @@ package object model {
       }
   }
 
-  private[model] def sort(cards: List[CardWrapper]): List[CardWrapper] =
+  private[model] def sort(cards: List[Card]): List[Card] =
     cards
       .sortWith {
         case (wrapper1, wrapper2) =>
