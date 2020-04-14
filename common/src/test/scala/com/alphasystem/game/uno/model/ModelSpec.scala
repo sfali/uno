@@ -8,16 +8,20 @@ class ModelSpec
     with Matchers {
 
   "Creates suites properly" in {
-    val expectedFirstSuite = Card.Zero :: Card.One :: Card.Two :: Card.Three :: Card.Four :: Card.Five :: Card.Six ::
-      Card.Seven :: Card.Eight :: Card.Nine :: Card.Skip :: Card.Reverse :: Card.DrawTwo :: Card.Wild :: Nil
-    val expectedSecondSuite = Card.One :: Card.Two :: Card.Three :: Card.Four :: Card.Five :: Card.Six ::
-      Card.Seven :: Card.Eight :: Card.Nine :: Card.Skip :: Card.Reverse :: Card.DrawTwo :: Card.WildDrawFour :: Nil
+    val expectedFirstSuite = CardEntry.Zero :: CardEntry.One :: CardEntry.Two :: CardEntry.Three :: CardEntry.Four :: CardEntry.Five :: CardEntry.Six ::
+      CardEntry.Seven :: CardEntry.Eight :: CardEntry.Nine :: CardEntry.Skip :: CardEntry.Reverse :: CardEntry.DrawTwo :: Nil
+    val expectedSecondSuite = CardEntry.One :: CardEntry.Two :: CardEntry.Three :: CardEntry.Four :: CardEntry.Five :: CardEntry.Six ::
+      CardEntry.Seven :: CardEntry.Eight :: CardEntry.Nine :: CardEntry.Skip :: CardEntry.Reverse :: CardEntry.DrawTwo :: Nil
 
-    Color.values.foreach {
+    Color.values.dropRight(1).foreach {
       color =>
         color.firstSuite.toList shouldBe expectedFirstSuite
         color.secondSuite.toList shouldBe expectedSecondSuite
     }
+
+    val symbol = Color.values.last
+    symbol.firstSuite.toList shouldBe CardEntry.Wild :: CardEntry.Wild :: CardEntry.Wild :: CardEntry.Wild :: Nil
+    symbol.secondSuite.toList shouldBe CardEntry.WildDrawFour :: CardEntry.WildDrawFour :: CardEntry.WildDrawFour :: CardEntry.WildDrawFour :: Nil
 
     val totalCards =
       Color.values.foldLeft(0) {
@@ -28,7 +32,7 @@ class ModelSpec
   }
 
   "Create Deck properly" in {
-    Deck().cards.toSet.size shouldBe 108
+    Deck().cards.size shouldBe 108
   }
 
   "Distribute cards properly" in {
@@ -39,10 +43,10 @@ class ModelSpec
       case (i, value) => println(s"$i: $value")
     }
     val allCards =
-      cards.values.foldLeft(List[CardWrapper]()) {
+      cards.values.foldLeft(List[Card]()) {
         (aggregatedList, ls) => aggregatedList ::: ls
 
-      }.toSet
+      }
     allCards.size shouldBe 21
   }
 }
