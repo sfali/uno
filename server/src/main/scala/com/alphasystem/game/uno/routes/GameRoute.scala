@@ -59,7 +59,11 @@ class GameRoute private(gameActorRef: ActorRef[ShardingEnvelope[GameBehavior.Com
                       case Right(requestEnvelope) =>
                         log.info("Received message of type: {}", requestEnvelope.requestType)
                         requestEnvelope.requestType match {
-                          case RequestType.StartGame => ShardingEnvelope(gameId.toString, GameBehavior.StartGame(playerName))
+                          case RequestType.StartGame =>
+                            ShardingEnvelope(gameId.toString, GameBehavior.StartGame(playerName))
+                          case x =>
+                            log.warn("unhandled type: {}", x)
+                            ShardingEnvelope(gameId.toString, GameBehavior.Shutdown)
                         }
                     }
                   case message =>
@@ -73,6 +77,7 @@ class GameRoute private(gameActorRef: ActorRef[ShardingEnvelope[GameBehavior.Com
               Flow[Event]
                 .map {
                   case ResponseEvent(responseEnvelope) => TextMessage(responseEnvelope.asJson.noSpaces)
+
                   case event => throw new RuntimeException(s"Invalid event: $event")
                 })
 
@@ -82,7 +87,9 @@ class GameRoute private(gameActorRef: ActorRef[ShardingEnvelope[GameBehavior.Com
                 ref = gameActorRef,
                 onCompleteMessage = ShardingEnvelope(gameId.toString, GameBehavior.PlayerLeft(playerName)),
                 onFailureMessage = {
-                  ex => ShardingEnvelope(gameId.toString, GameBehavior.Fail(ex))
+                  ex =>
+                    log.error("Exception occurred in sink", ex)
+                    ShardingEnvelope(gameId.toString, GameBehavior.Fail(ex))
                 })
 
           materialization ~> merge ~> websocketSink

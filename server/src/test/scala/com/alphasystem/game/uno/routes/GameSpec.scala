@@ -7,8 +7,9 @@ import akka.cluster.typed.{Cluster, Join}
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest, WSProbe}
 import com.alphasystem.game.uno.model.game.GameStatus
-import com.alphasystem.game.uno.model.response.{PlayerJoined, ResponseEnvelope, ResponseType}
-import com.alphasystem.game.uno.model.{Event, Player, StateInfo}
+import com.alphasystem.game.uno.model.request.{RequestEnvelope, RequestType}
+import com.alphasystem.game.uno.model.response._
+import com.alphasystem.game.uno.model.{Event, Player, StateInfo, request}
 import com.alphasystem.game.uno.server.Main.Guardian
 import com.alphasystem.game.uno.server.actor.GameBehavior
 import com.alphasystem.game.uno.test._
@@ -33,12 +34,10 @@ class GameSpec
     interval = Span(500, Millis))
   private implicit val testTimeout: RouteTestTimeout = RouteTestTimeout(10.seconds)
 
-  private val gameId = 1000
   private val testKit = ActorTestKit("uno")
   private val probe = testKit.createTestProbe[Event]()
-  private lazy val gameActorRef = GameBehavior.init(testKit.system)
   private val players = (0 to 4).map(createPlayer).toArray
-  private val wsProbes = Array(WSProbe(), WSProbe(), WSProbe(), WSProbe(), WSProbe())
+  private lazy val gameActorRef = GameBehavior.init(testKit.system)
   private lazy val gameRoute = GameRoute(gameActorRef)
 
   override protected def beforeAll(): Unit = {
@@ -59,80 +58,105 @@ class GameSpec
 
   "Connect to websocket" in {
     val probe = WSProbe()
-    WS(uri("Player1", 1), probe.flow) ~> gameRoute ~> check {
+    WS(uri(Player(0, "Player1"), 1), probe.flow) ~> gameRoute ~> check {
       isWebSocketUpgrade shouldEqual true
     }
   }
 
+  "Add players" in {
+    val wsClients = Array(WSProbe(), WSProbe(), WSProbe(), WSProbe(), WSProbe())
+    players.map(_.position).foreach(validateJoinGame(1000, players, wsClients))
+  }
+
+  "Start game" in {
+    val gameId = 1001
+    val clients = Array(WSProbe(), WSProbe(), WSProbe(), WSProbe(), WSProbe())
+    val client1 = clients(0)
+    val player1 = players(0)
+    WS(uri(player1, gameId), client1.flow) ~> gameRoute ~> check {
+      validateGameJoined(client1, player1, playersAlreadyJoined(0, players))
+      val client2 = clients(1)
+      val player2 = players(1)
+      WS(uri(player2, gameId), client2.flow) ~> gameRoute ~> check {
+        validateGameJoined(client2, player2, playersAlreadyJoined(1, players))
+        validatePlayerJoined(client1, 0, player2)
+        val client3 = clients(2)
+        val player3 = players(2)
+        WS(uri(player3, gameId), client3.flow) ~> gameRoute ~> check {
+          validateGameJoined(client3, player3, playersAlreadyJoined(2, players))
+          validatePlayerJoined(client1, 0, player3)
+          validatePlayerJoined(client2, 1, player3)
+          val client4 = clients(3)
+          val player4 = players(3)
+          WS(uri(player4, gameId), client4.flow) ~> gameRoute ~> check {
+            validateGameJoined(client4, player4, playersAlreadyJoined(3, players))
+            validatePlayerJoined(client1, 0, player4)
+            validatePlayerJoined(client2, 1, player4)
+            validatePlayerJoined(client3, 2, player4)
+            val client5 = clients(4)
+            val player5 = players(4)
+            WS(uri(player5, gameId), client5.flow) ~> gameRoute ~> check {
+              validateGameJoined(client5, player5, playersAlreadyJoined(4, players))
+              validatePlayerJoined(client1, 0, player5)
+              validatePlayerJoined(client2, 1, player5)
+              validatePlayerJoined(client3, 2, player5)
+              validatePlayerJoined(client4, 3, player5)
+              val text = RequestEnvelope(0, RequestType.StartGame, request.Empty()).asJson.noSpaces
+              client1.sendMessage(text)
+              client1.expectNoMessage()
+              val response = ResponseEnvelope(1, ResponseType.ConfirmationMessage, Message(player1.name,
+                MessageCode.CanStartGame))
+              client2.expectMessage(response.asJson.noSpaces)
+              client3.expectMessage(response.copy(position = 2).asJson.noSpaces)
+              client4.expectMessage(response.copy(position = 3).asJson.noSpaces)
+              client5.expectMessage(response.copy(position = 4).asJson.noSpaces)
+            } // end of player 5
+          } // // end of player 4
+        } // end of player 3
+      } // end of player 2
+    } // end of player 1
+  }
+
   "Check game state" in {
+    val gameId = 1000
     gameActorRef ! ShardingEnvelope(gameId.toString, GameBehavior.GetState(probe.ref))
     val gameState = probe.receiveMessage().asInstanceOf[StateInfo].state
     gameState.id shouldBe gameId
-    gameState.players.toList shouldBe empty
+    gameState.players.toList shouldBe players.toList
     gameState.status shouldBe GameStatus.Initiated
   }
 
-  "Add players" in {
-    // Player1 join the game
-    val probe1 = wsProbes.head
-    val player1 = players.head
-    WS(uri(player1.name), probe1.flow) ~> gameRoute ~> check {
-      validateGameJoined(probe1, player1)
-    }
-
-    // Player2 join the game
-    val probe2 = wsProbes(1)
-    val player2 = players(1)
-    WS(uri(player2.name), probe2.flow) ~> gameRoute ~> check {
-      validateGameJoined(probe2, player2, player1 :: Nil)
-      validatePlayerJoined(probe1, player1.position, player2)
-    }
-
-    // Player3 join the game
-    val probe3 = wsProbes(2)
-    val player3 = players(2)
-    WS(uri(player3.name), probe3.flow) ~> gameRoute ~> check {
-      validateGameJoined(probe3, player3, player1 :: player2 :: Nil)
-      validatePlayerJoined(probe1, player1.position, player3)
-      validatePlayerJoined(probe2, player2.position, player3)
-    }
-
-
-    // Player4 join the game
-    val probe4 = wsProbes(3)
-    val player4 = players(3)
-    WS(uri(player4.name), probe4.flow) ~> gameRoute ~> check {
-      validateGameJoined(probe4, player4, player1 :: player2 :: player3 :: Nil)
-      validatePlayerJoined(probe1, player1.position, player4)
-      validatePlayerJoined(probe2, player2.position, player4)
-      validatePlayerJoined(probe3, player3.position, player4)
-    }
-
-    // Player5 join the game
-    val probe5 = wsProbes(4)
-    val player5 = players(4)
-    WS(uri(player5.name), probe5.flow) ~> gameRoute ~> check {
-      validateGameJoined(probe5, player5, player1 :: player2 :: player3 :: player4 :: Nil)
-      validatePlayerJoined(probe1, player1.position, player5)
-      validatePlayerJoined(probe2, player2.position, player5)
-      validatePlayerJoined(probe3, player3.position, player5)
-      validatePlayerJoined(probe4, player4.position, player5)
+  private def validateJoinGame(gameId: Int,
+                               players: Array[Player],
+                               wsClients: Array[WSProbe])(position: Int): Unit = {
+    val player = players(position)
+    val client = wsClients(position)
+    WS(uri(player, gameId), client.flow) ~> gameRoute ~> check {
+      val otherPLayers = playersAlreadyJoined(position, players)
+      validateGameJoined(client, player, otherPLayers)
+      otherPLayers.map(_.position)
+        .foreach {
+          pos => validatePlayerJoined(wsClients(pos), pos, player)
+        }
     }
   }
 
-  private def validateGameJoined(probe: WSProbe,
+  private def playersAlreadyJoined(position: Int, players: Array[Player]) =
+    (0 until position).map(pos => players(pos)).toList
+
+  private def validateGameJoined(client: WSProbe,
                                  player: Player,
-                                 otherPlayers: List[Player] = Nil): Unit = {
+                                 otherPlayers: List[Player]): Unit = {
     val responseEnvelope = ResponseEnvelope(player.position, ResponseType.GameJoined, PlayerJoined(player, otherPlayers))
-    probe.expectMessage(responseEnvelope.asJson.noSpaces)
+    client.expectMessage(responseEnvelope.asJson.noSpaces)
   }
 
-  private def validatePlayerJoined(probe: WSProbe,
+  private def validatePlayerJoined(client: WSProbe,
                                    position: Int,
                                    player: Player): Unit = {
     val responseEnvelope = ResponseEnvelope(position, ResponseType.NewPlayerJoined, PlayerJoined(player))
-    probe.expectMessage(responseEnvelope.asJson.noSpaces)
+    client.expectMessage(responseEnvelope.asJson.noSpaces)
   }
 
-  private def uri(playerName: String, id: Int = this.gameId) = Uri(s"/gameId/$id/playerName/$playerName")
+  private def uri(player: Player, id: Int) = Uri(s"/gameId/$id/playerName/${player.name}")
 }

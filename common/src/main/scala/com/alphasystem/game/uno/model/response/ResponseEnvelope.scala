@@ -1,7 +1,6 @@
 package com.alphasystem.game.uno.model.response
 
 import io.circe._
-import io.circe.generic.auto._
 
 case class ResponseEnvelope(position: Int, responseType: ResponseType, payload: ResponsePayload)
 
