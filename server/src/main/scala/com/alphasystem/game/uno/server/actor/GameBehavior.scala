@@ -90,7 +90,7 @@ class GameBehavior private(context: ActorContext[Command],
 
       case other: GameCommand =>
         context.log.warn("Invalid command: {} in joinGame from: {}", other.getClass.getSimpleName, other.name)
-        gameService.illegalMove(other.name)
+        gameService.illegalAccess(other.name)
         Behaviors.same
     }
 
@@ -137,7 +137,7 @@ class GameBehavior private(context: ActorContext[Command],
 
       case other: GameCommand =>
         context.log.warn("Invalid command: {} in startGame from: {}", other.getClass.getSimpleName, other.name)
-        gameService.illegalMove(other.name)
+        gameService.illegalAccess(other.name)
         Behaviors.same
     }
 
@@ -180,7 +180,7 @@ class GameBehavior private(context: ActorContext[Command],
       case other: GameCommand =>
         // TODO: handle JoinGame separately
         context.log.warn("Invalid command: {} in startGame from: {}", other.getClass.getSimpleName, other.name)
-        gameService.illegalMove(other.name)
+        gameService.illegalAccess(other.name)
         Behaviors.same
     }
 

@@ -59,11 +59,11 @@ class GameService(gameId: Int) {
     } else false
   }
 
-  def illegalMove(name: String): Unit =
+  def illegalAccess(name: String): Unit =
     _state.player(name) match {
       case Some(player) =>
         val position = player.position
-        val envelope = ResponseEnvelope(position, ResponseType.ErrorMessage, Message(name, MessageCode.IllegalMove))
+        val envelope = ResponseEnvelope(position, ResponseType.ErrorMessage, Message(name, MessageCode.IllegalAccess))
         playerToActorRefs(position) ! ResponseEvent(envelope)
       case None => // do nothing
     }

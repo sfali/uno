@@ -10,4 +10,6 @@ object MessageCode extends Enum[MessageCode] with CirceEnum[MessageCode] {
   final case object CanStartGame extends MessageCode
 
   final case object IllegalMove extends MessageCode
+
+  final case object IllegalAccess extends MessageCode
 }
