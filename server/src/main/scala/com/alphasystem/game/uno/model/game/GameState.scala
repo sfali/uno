@@ -22,6 +22,8 @@ case class GameState(id: Int,
 
   def player(name: String): Option[Player] = players.find(_.name == name)
 
+  def position(name: String): Option[Int] = player(name).map(_.position)
+
   def currentPlayer: Player = players(currentPlayerId)
 
   def updateStatus(status: GameStatus): GameState = copy(status = status)

@@ -9,7 +9,7 @@ import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Sink, Source}
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import akka.stream.{FlowShape, OverflowStrategy}
-import com.alphasystem.game.uno.model.request.{RequestEnvelope, RequestType}
+import com.alphasystem.game.uno.model.request.RequestEnvelope
 import com.alphasystem.game.uno.model.{Event, Fail, Finished, ResponseEvent}
 import com.alphasystem.game.uno.server.actor.GameBehavior
 import io.circe.parser._
@@ -58,13 +58,7 @@ class GameRoute private(gameActorRef: ActorRef[ShardingEnvelope[GameBehavior.Com
 
                       case Right(requestEnvelope) =>
                         log.info("Received message of type: {}", requestEnvelope.requestType)
-                        requestEnvelope.requestType match {
-                          case RequestType.StartGame =>
-                            ShardingEnvelope(gameId.toString, GameBehavior.StartGame(playerName))
-                          case x =>
-                            log.warn("unhandled type: {}", x)
-                            ShardingEnvelope(gameId.toString, GameBehavior.Shutdown)
-                        }
+                        requestEnvelope.toCommand(gameId, playerName)
                     }
                   case message =>
                     val textMessage = message.asTextMessage

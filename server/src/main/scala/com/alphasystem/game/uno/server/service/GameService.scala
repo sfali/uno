@@ -11,6 +11,7 @@ class GameService(gameId: Int) {
   private val log = LoggerFactory.getLogger(classOf[GameService])
   private var _state = GameState(gameId)
   private var playerToActorRefs = Map.empty[Int, ActorRef[Event]]
+  private var confirmationApprovals = Map.empty[Int, Boolean].withDefaultValue(false)
 
   def joinGame(name: String, replyTo: ActorRef[Event]): Boolean = {
     log.info("Player '{}' is about to join", name)
@@ -44,6 +45,18 @@ class GameService(gameId: Int) {
             playerToActorRefs(position) ! ResponseEvent(envelope)
         }
     }
+  }
+
+  def startGameApprovals(name: String, approved: Boolean): Boolean = {
+    val position = _state.position(name).getOrElse(-1)
+    if (position >= 0) {
+      val s = if (approved) "approved " else "rejected"
+      log.info("Start game request is {} by {}", s, name)
+      confirmationApprovals += (position -> approved)
+      val acceptedCount = confirmationApprovals.count(_._2 == true).toDouble
+      val approvalPercentage = (acceptedCount / playerToActorRefs.size) * 100
+      approvalPercentage >= 50.0
+    } else false
   }
 
   def illegalMove(name: String): Unit =

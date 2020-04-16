@@ -82,6 +82,8 @@ class GameSpec
             WS(uri(players(4), gameId), clients(4).flow) ~> gameRoute ~> check {
               validateJoinGame(4, clients)
               validateStartGame(clients)
+              validateStartGameConfirmation(clients)
+              clients.foreach(_.sendCompletion())
             } // end of player 5
           } // // end of player 4
         } // end of player 3
@@ -115,6 +117,15 @@ class GameSpec
             MessageCode.CanStartGame))
           clients(pos).expectMessage(response.asJson.noSpaces)
       }
+  }
+
+  private def validateStartGameConfirmation(clients: Array[WSProbe]): Unit = {
+    clients(2).sendMessage(RequestEnvelope(2, RequestType.StartGameRejected, request.Empty()).asJson.noSpaces)
+    val requestEnvelope = RequestEnvelope(1, RequestType.StartGameApproved, request.Empty())
+    clients(1).sendMessage(requestEnvelope.asJson.noSpaces)
+    clients(3).sendMessage(requestEnvelope.copy(position = 3).asJson.noSpaces)
+    clients(4).sendMessage(requestEnvelope.copy(position = 4).asJson.noSpaces)
+    clients(0).expectNoMessage()
   }
 
   private def validateJoinGame(gameId: Int,

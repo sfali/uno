@@ -1,6 +1,6 @@
 package com.alphasystem.game.uno.server.actor
 
-import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior, PostStop, Signal}
 import akka.cluster.sharding.typed.ShardingEnvelope
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}
@@ -13,6 +13,8 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 
 class GameBehavior private(context: ActorContext[Command],
+                           buffer: StashBuffer[Command],
+                           timer: TimerScheduler[Command],
                            gameId: Int)
   extends AbstractBehavior[Command](context) {
 
@@ -23,12 +25,44 @@ class GameBehavior private(context: ActorContext[Command],
   context.setReceiveTimeout(1 minute, Idle)
   context.log.info("Starting game: {}", gameId)
 
+  context.self ! Init
+
   override def onMessage(msg: Command): Behavior[Command] =
     msg match {
+      case Init => buffer.unstashAll(joinGame)
+
+      case GetState(replyTo) =>
+        replyTo ! StateInfo(gameService.state)
+        Behaviors.same
+
+      case PlayerLeft(name) =>
+        // TODO:
+        context.log.warn("Player {} is left the game", name)
+        Behaviors.same
+
+      case Fail(name, ex) =>
+        // TODO:
+        context.log.error("Exception occurred in up stream", ex)
+        Behaviors.same
+
+      case Idle =>
+        if (GameStatus.Started == gameService.state.status) {
+          context.log.warn("Did not get response from player '{}' in last one minute", gameService.state.currentPlayer.name)
+        }
+        Behaviors.same
+
+      case Shutdown => Behaviors.stopped
+
+      case other =>
+        buffer.stash(other)
+        Behaviors.same
+    }
+
+  private def joinGame: Behavior[Command] =
+    Behaviors.receiveMessagePartial {
       case JoinGame(name, replyTo) => joinGame(name, replyTo)
 
       case StartGame(name) =>
-        context.log.info("Got request to start game from: {}", name)
         context.self ! StartGame(name)
         startGame
 
@@ -55,7 +89,7 @@ class GameBehavior private(context: ActorContext[Command],
       case Shutdown => Behaviors.stopped
 
       case other: GameCommand =>
-        context.log.warn("Invalid command: {} in OnMessage from: {}", other.getClass.getSimpleName, other.name)
+        context.log.warn("Invalid command: {} in joinGame from: {}", other.getClass.getSimpleName, other.name)
         gameService.illegalMove(other.name)
         Behaviors.same
     }
@@ -71,9 +105,54 @@ class GameBehavior private(context: ActorContext[Command],
         // If we reached max capacity, then start the game
         // Otherwise ask other players for their consent
         if (gameService.state.reachedCapacity) {
-          context.log.warn("Why here")
           // TODO: start with toss to find who would start the game
-        } else gameService.startGame(name)
+          Behaviors.same
+        } else {
+          gameService.startGame(name)
+          timer.startSingleTimer(WaitForConfirmations.getClass.getSimpleName, WaitForConfirmations, 30 seconds)
+          startGameApprovals
+        }
+
+      case GetState(replyTo) =>
+        replyTo ! StateInfo(gameService.state)
+        Behaviors.same
+
+      case PlayerLeft(name) =>
+        // TODO:
+        context.log.warn("Player {} is left the game", name)
+        Behaviors.same
+
+      case Fail(name, ex) =>
+        // TODO:
+        context.log.error("Exception occurred in up stream", ex)
+        Behaviors.same
+
+      case Idle =>
+        if (GameStatus.Started == gameService.state.status) {
+          context.log.warn("Did not get response from player '{}' in last one minute", gameService.state.currentPlayer.name)
+        }
+        Behaviors.same
+
+      case Shutdown => Behaviors.stopped
+
+      case other: GameCommand =>
+        context.log.warn("Invalid command: {} in startGame from: {}", other.getClass.getSimpleName, other.name)
+        gameService.illegalMove(other.name)
+        Behaviors.same
+    }
+
+  private def startGameApprovals: Behavior[Command] =
+    Behaviors.receiveMessagePartial {
+      case WaitForConfirmations =>
+        context.log.warn("Waited for 30 seconds for start game approvals but not all confirmations arrived")
+        joinGame
+
+      case ConfirmationApproval(name, approved) =>
+        if (gameService.startGameApprovals(name, approved)) {
+          // TODO: moved to toss
+          timer.cancel(WaitForConfirmations.getClass.getSimpleName)
+          context.log.info("Start game request approved")
+        }
         Behaviors.same
 
       case GetState(replyTo) =>
@@ -99,6 +178,7 @@ class GameBehavior private(context: ActorContext[Command],
       case Shutdown => Behaviors.stopped
 
       case other: GameCommand =>
+        // TODO: handle JoinGame separately
         context.log.warn("Invalid command: {} in startGame from: {}", other.getClass.getSimpleName, other.name)
         gameService.illegalMove(other.name)
         Behaviors.same
@@ -160,10 +240,15 @@ object GameBehavior {
   val EntityKey: EntityTypeKey[Command] = EntityTypeKey[Command]("UnoGame")
 
   private def apply(gameId: Int): Behavior[Command] = {
-    Behaviors
-      .setup[Command] { context =>
-        new GameBehavior(context, gameId)
-      }
+    Behaviors.setup[Command] {
+      context =>
+        Behaviors.withStash[Command](10) {
+          buffer =>
+            Behaviors.withTimers[Command] {
+              timer => new GameBehavior(context, buffer, timer, gameId)
+            }
+        }
+    }
   }
 
   def init(system: ActorSystem[_]): ActorRef[ShardingEnvelope[Command]] =
@@ -179,6 +264,8 @@ object GameBehavior {
     val name: String
   }
 
+  private final case object Init extends Command
+
   private final case object Idle extends Command
 
   final case object Shutdown extends Command
@@ -189,6 +276,10 @@ object GameBehavior {
   final case class JoinGame(name: String, replyTo: ActorRef[Event]) extends GameCommand
 
   final case class StartGame(name: String) extends GameCommand
+
+  final case object WaitForConfirmations extends Command
+
+  final case class ConfirmationApproval(name: String, approved: Boolean) extends GameCommand
 
   final case class PlayerLeft(name: String) extends GameCommand
 
