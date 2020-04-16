@@ -71,45 +71,17 @@ class GameSpec
   "Start game" in {
     val gameId = 1001
     val clients = Array(WSProbe(), WSProbe(), WSProbe(), WSProbe(), WSProbe())
-    val client1 = clients(0)
-    val player1 = players(0)
-    WS(uri(player1, gameId), client1.flow) ~> gameRoute ~> check {
-      validateGameJoined(client1, player1, playersAlreadyJoined(0, players))
-      val client2 = clients(1)
-      val player2 = players(1)
-      WS(uri(player2, gameId), client2.flow) ~> gameRoute ~> check {
-        validateGameJoined(client2, player2, playersAlreadyJoined(1, players))
-        validatePlayerJoined(client1, 0, player2)
-        val client3 = clients(2)
-        val player3 = players(2)
-        WS(uri(player3, gameId), client3.flow) ~> gameRoute ~> check {
-          validateGameJoined(client3, player3, playersAlreadyJoined(2, players))
-          validatePlayerJoined(client1, 0, player3)
-          validatePlayerJoined(client2, 1, player3)
-          val client4 = clients(3)
-          val player4 = players(3)
-          WS(uri(player4, gameId), client4.flow) ~> gameRoute ~> check {
-            validateGameJoined(client4, player4, playersAlreadyJoined(3, players))
-            validatePlayerJoined(client1, 0, player4)
-            validatePlayerJoined(client2, 1, player4)
-            validatePlayerJoined(client3, 2, player4)
-            val client5 = clients(4)
-            val player5 = players(4)
-            WS(uri(player5, gameId), client5.flow) ~> gameRoute ~> check {
-              validateGameJoined(client5, player5, playersAlreadyJoined(4, players))
-              validatePlayerJoined(client1, 0, player5)
-              validatePlayerJoined(client2, 1, player5)
-              validatePlayerJoined(client3, 2, player5)
-              validatePlayerJoined(client4, 3, player5)
-              val text = RequestEnvelope(0, RequestType.StartGame, request.Empty()).asJson.noSpaces
-              client1.sendMessage(text)
-              client1.expectNoMessage()
-              val response = ResponseEnvelope(1, ResponseType.ConfirmationMessage, Message(player1.name,
-                MessageCode.CanStartGame))
-              client2.expectMessage(response.asJson.noSpaces)
-              client3.expectMessage(response.copy(position = 2).asJson.noSpaces)
-              client4.expectMessage(response.copy(position = 3).asJson.noSpaces)
-              client5.expectMessage(response.copy(position = 4).asJson.noSpaces)
+    WS(uri(players(0), gameId), clients(0).flow) ~> gameRoute ~> check {
+      validateJoinGame(0, clients)
+      WS(uri(players(1), gameId), clients(1).flow) ~> gameRoute ~> check {
+        validateJoinGame(1, clients)
+        WS(uri(players(2), gameId), clients(2).flow) ~> gameRoute ~> check {
+          validateJoinGame(2, clients)
+          WS(uri(players(3), gameId), clients(3).flow) ~> gameRoute ~> check {
+            validateJoinGame(3, clients)
+            WS(uri(players(4), gameId), clients(4).flow) ~> gameRoute ~> check {
+              validateJoinGame(4, clients)
+              validateStartGame(clients)
             } // end of player 5
           } // // end of player 4
         } // end of player 3
@@ -124,6 +96,25 @@ class GameSpec
     gameState.id shouldBe gameId
     gameState.players.toList shouldBe players.toList
     gameState.status shouldBe GameStatus.Initiated
+  }
+
+  private def validateJoinGame(position: Int, clients: Array[WSProbe]): Unit = {
+    validateGameJoined(clients(position), players(position), playersAlreadyJoined(position, players))
+    (0 until position).foreach(pos => validatePlayerJoined(clients(pos), pos, players(position)))
+  }
+
+  private def validateStartGame(clients: Array[WSProbe]): Unit = {
+    val client = clients(0)
+    val text = RequestEnvelope(0, RequestType.StartGame, request.Empty()).asJson.noSpaces
+    client.sendMessage(text)
+    client.expectNoMessage()
+    (1 until clients.length)
+      .foreach {
+        pos =>
+          val response = ResponseEnvelope(pos, ResponseType.ConfirmationMessage, Message(players(0).name,
+            MessageCode.CanStartGame))
+          clients(pos).expectMessage(response.asJson.noSpaces)
+      }
   }
 
   private def validateJoinGame(gameId: Int,
