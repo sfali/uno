@@ -41,7 +41,7 @@ class GameBehavior private(context: ActorContext[Command],
         context.log.warn("Player {} is left the game", name)
         Behaviors.same
 
-      case Fail(ex) =>
+      case Fail(name, ex) =>
         // TODO:
         context.log.error("Exception occurred in up stream", ex)
         Behaviors.same
@@ -54,9 +54,9 @@ class GameBehavior private(context: ActorContext[Command],
 
       case Shutdown => Behaviors.stopped
 
-      case other =>
-        // TODO: no other type is expecting here
-        context.log.warn("Invalid message: {} in OnMessage", other.getClass.getSimpleName)
+      case other: GameCommand =>
+        context.log.warn("Invalid command: {} in OnMessage from: {}", other.getClass.getSimpleName, other.name)
+        gameService.illegalMove(other.name)
         Behaviors.same
     }
 
@@ -85,7 +85,7 @@ class GameBehavior private(context: ActorContext[Command],
         context.log.warn("Player {} is left the game", name)
         Behaviors.same
 
-      case Fail(ex) =>
+      case Fail(name, ex) =>
         // TODO:
         context.log.error("Exception occurred in up stream", ex)
         Behaviors.same
@@ -97,6 +97,11 @@ class GameBehavior private(context: ActorContext[Command],
         Behaviors.same
 
       case Shutdown => Behaviors.stopped
+
+      case other: GameCommand =>
+        context.log.warn("Invalid command: {} in startGame from: {}", other.getClass.getSimpleName, other.name)
+        gameService.illegalMove(other.name)
+        Behaviors.same
     }
 
   private def gameMode: Behavior[Command] =
@@ -112,9 +117,9 @@ class GameBehavior private(context: ActorContext[Command],
         context.log.warn("Player {} is left the game", name)
         Behaviors.same
 
-      case Fail(ex) =>
+      case Fail(name, ex) =>
         // TODO:
-        context.log.error("Exception occured in up stream", ex)
+        context.log.error("Exception occurred in up stream", ex)
         Behaviors.same
 
       case Idle =>
@@ -170,6 +175,10 @@ object GameBehavior {
 
   sealed trait Command
 
+  sealed trait GameCommand extends Command {
+    val name: String
+  }
+
   private final case object Idle extends Command
 
   final case object Shutdown extends Command
@@ -177,12 +186,12 @@ object GameBehavior {
   // Only for testing purpose, not exposed publicly
   final case class GetState(replyTo: ActorRef[Event]) extends Command
 
-  final case class JoinGame(name: String, replyTo: ActorRef[Event]) extends Command
+  final case class JoinGame(name: String, replyTo: ActorRef[Event]) extends GameCommand
 
-  final case class StartGame(name: String) extends Command
+  final case class StartGame(name: String) extends GameCommand
 
-  final case class PlayerLeft(name: String) extends Command
+  final case class PlayerLeft(name: String) extends GameCommand
 
-  final case class Fail(ex: Throwable) extends Command
+  final case class Fail(name: String, ex: Throwable) extends GameCommand
 
 }

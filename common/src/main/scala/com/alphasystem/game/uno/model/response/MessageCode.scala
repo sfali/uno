@@ -8,4 +8,6 @@ object MessageCode extends Enum[MessageCode] with CirceEnum[MessageCode] {
   override def values: IndexedSeq[MessageCode] = findValues
 
   final case object CanStartGame extends MessageCode
+
+  final case object IllegalMove extends MessageCode
 }

@@ -89,7 +89,7 @@ class GameRoute private(gameActorRef: ActorRef[ShardingEnvelope[GameBehavior.Com
                 onFailureMessage = {
                   ex =>
                     log.error("Exception occurred in sink", ex)
-                    ShardingEnvelope(gameId.toString, GameBehavior.Fail(ex))
+                    ShardingEnvelope(gameId.toString, GameBehavior.Fail(playerName, ex))
                 })
 
           materialization ~> merge ~> websocketSink

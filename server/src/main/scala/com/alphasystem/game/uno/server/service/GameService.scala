@@ -31,7 +31,7 @@ class GameService(gameId: Int) {
     _state.reachedCapacity
   }
 
-  def startGame(name: String): Boolean = {
+  def startGame(name: String): Unit = {
     log.info("Get request to start game from {}", name)
     val validPlayer = _state.players.exists(_.name == name)
     // for invalid, we do not need to send back any response
@@ -44,8 +44,16 @@ class GameService(gameId: Int) {
             playerToActorRefs(position) ! ResponseEvent(envelope)
         }
     }
-    validPlayer
   }
+
+  def illegalMove(name: String): Unit =
+    _state.player(name) match {
+      case Some(player) =>
+        val position = player.position
+        val envelope = ResponseEnvelope(position, ResponseType.ErrorMessage, Message(name, MessageCode.IllegalMove))
+        playerToActorRefs(position) ! ResponseEvent(envelope)
+      case None => // do nothing
+    }
 
   def state: GameState = _state
 }
