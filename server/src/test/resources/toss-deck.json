@@ -1,0 +1,434 @@
+[
+  {
+    "color" : 2,
+    "card" : 10
+  },
+  {
+    "color" : 3,
+    "card" : 5
+  },
+  {
+    "color" : 1,
+    "card" : 6
+  },
+  {
+    "color" : 1,
+    "card" : 12
+  },
+  {
+    "color" : 2,
+    "card" : 7
+  },
+  {
+    "color" : 3,
+    "card" : 7
+  },
+  {
+    "color" : 4,
+    "card" : 0
+  },
+  {
+    "color" : 1,
+    "card" : 11
+  },
+  {
+    "color" : 1,
+    "card" : 10
+  },
+  {
+    "color" : 3,
+    "card" : 11
+  },
+  {
+    "color" : 2,
+    "card" : 5
+  },
+  {
+    "color" : 4,
+    "card" : 5
+  },
+  {
+    "color" : 3,
+    "card" : 6
+  },
+  {
+    "color" : 1,
+    "card" : 5
+  },
+  {
+    "color" : 4,
+    "card" : 4
+  },
+  {
+    "color" : 3,
+    "card" : 1
+  },
+  {
+    "color" : 2,
+    "card" : 4
+  },
+  {
+    "color" : 3,
+    "card" : 12
+  },
+  {
+    "color" : 1,
+    "card" : 1
+  },
+  {
+    "color" : 2,
+    "card" : 1
+  },
+  {
+    "color" : 2,
+    "card" : 8
+  },
+  {
+    "color" : 1,
+    "card" : 1
+  },
+  {
+    "color" : 4,
+    "card" : 3
+  },
+  {
+    "color" : 4,
+    "card" : 9
+  },
+  {
+    "color" : 3,
+    "card" : 10
+  },
+  {
+    "color" : 2,
+    "card" : 5
+  },
+  {
+    "color" : 5,
+    "card" : 14
+  },
+  {
+    "color" : 3,
+    "card" : 4
+  },
+  {
+    "color" : 4,
+    "card" : 6
+  },
+  {
+    "color" : 4,
+    "card" : 6
+  },
+  {
+    "color" : 1,
+    "card" : 2
+  },
+  {
+    "color" : 2,
+    "card" : 6
+  },
+  {
+    "color" : 2,
+    "card" : 1
+  },
+  {
+    "color" : 2,
+    "card" : 6
+  },
+  {
+    "color" : 2,
+    "card" : 11
+  },
+  {
+    "color" : 1,
+    "card" : 7
+  },
+  {
+    "color" : 4,
+    "card" : 8
+  },
+  {
+    "color" : 1,
+    "card" : 6
+  },
+  {
+    "color" : 1,
+    "card" : 4
+  },
+  {
+    "color" : 4,
+    "card" : 11
+  },
+  {
+    "color" : 2,
+    "card" : 9
+  },
+  {
+    "color" : 4,
+    "card" : 11
+  },
+  {
+    "color" : 2,
+    "card" : 4
+  },
+  {
+    "color" : 4,
+    "card" : 10
+  },
+  {
+    "color" : 1,
+    "card" : 8
+  },
+  {
+    "color" : 1,
+    "card" : 2
+  },
+  {
+    "color" : 3,
+    "card" : 2
+  },
+  {
+    "color" : 2,
+    "card" : 3
+  },
+  {
+    "color" : 1,
+    "card" : 5
+  },
+  {
+    "color" : 4,
+    "card" : 2
+  },
+  {
+    "color" : 4,
+    "card" : 3
+  },
+  {
+    "color" : 4,
+    "card" : 7
+  },
+  {
+    "color" : 2,
+    "card" : 12
+  },
+  {
+    "color" : 3,
+    "card" : 10
+  },
+  {
+    "color" : 3,
+    "card" : 8
+  },
+  {
+    "color" : 3,
+    "card" : 9
+  },
+  {
+    "color" : 1,
+    "card" : 3
+  },
+  {
+    "color" : 1,
+    "card" : 4
+  },
+  {
+    "color" : 1,
+    "card" : 3
+  },
+  {
+    "color" : 4,
+    "card" : 2
+  },
+  {
+    "color" : 4,
+    "card" : 10
+  },
+  {
+    "color" : 4,
+    "card" : 1
+  },
+  {
+    "color" : 4,
+    "card" : 1
+  },
+  {
+    "color" : 2,
+    "card" : 9
+  },
+  {
+    "color" : 5,
+    "card" : 13
+  },
+  {
+    "color" : 4,
+    "card" : 12
+  },
+  {
+    "color" : 2,
+    "card" : 2
+  },
+  {
+    "color" : 2,
+    "card" : 10
+  },
+  {
+    "color" : 5,
+    "card" : 14
+  },
+  {
+    "color" : 1,
+    "card" : 10
+  },
+  {
+    "color" : 3,
+    "card" : 1
+  },
+  {
+    "color" : 5,
+    "card" : 13
+  },
+  {
+    "color" : 1,
+    "card" : 11
+  },
+  {
+    "color" : 2,
+    "card" : 11
+  },
+  {
+    "color" : 4,
+    "card" : 7
+  },
+  {
+    "color" : 2,
+    "card" : 7
+  },
+  {
+    "color" : 3,
+    "card" : 12
+  },
+  {
+    "color" : 1,
+    "card" : 12
+  },
+  {
+    "color" : 3,
+    "card" : 3
+  },
+  {
+    "color" : 4,
+    "card" : 4
+  },
+  {
+    "color" : 3,
+    "card" : 4
+  },
+  {
+    "color" : 1,
+    "card" : 0
+  },
+  {
+    "color" : 2,
+    "card" : 12
+  },
+  {
+    "color" : 5,
+    "card" : 14
+  },
+  {
+    "color" : 3,
+    "card" : 3
+  },
+  {
+    "color" : 3,
+    "card" : 2
+  },
+  {
+    "color" : 3,
+    "card" : 7
+  },
+  {
+    "color" : 5,
+    "card" : 14
+  },
+  {
+    "color" : 3,
+    "card" : 5
+  },
+  {
+    "color" : 5,
+    "card" : 13
+  },
+  {
+    "color" : 4,
+    "card" : 8
+  },
+  {
+    "color" : 3,
+    "card" : 11
+  },
+  {
+    "color" : 3,
+    "card" : 6
+  },
+  {
+    "color" : 5,
+    "card" : 13
+  },
+  {
+    "color" : 4,
+    "card" : 5
+  },
+  {
+    "color" : 4,
+    "card" : 12
+  },
+  {
+    "color" : 3,
+    "card" : 0
+  },
+  {
+    "color" : 1,
+    "card" : 7
+  },
+  {
+    "color" : 2,
+    "card" : 3
+  },
+  {
+    "color" : 2,
+    "card" : 0
+  },
+  {
+    "color" : 2,
+    "card" : 2
+  },
+  {
+    "color" : 4,
+    "card" : 9
+  },
+  {
+    "color" : 2,
+    "card" : 8
+  },
+  {
+    "color" : 3,
+    "card" : 9
+  },
+  {
+    "color" : 1,
+    "card" : 9
+  },
+  {
+    "color" : 1,
+    "card" : 9
+  },
+  {
+    "color" : 3,
+    "card" : 8
+  },
+  {
+    "color" : 1,
+    "card" : 8
+  }
+]
