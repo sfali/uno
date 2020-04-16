@@ -8,6 +8,7 @@ case class GameState(id: Int,
                      status: GameStatus,
                      players: Array[Player],
                      dealerId: Int,
+                     previousPlayerId: Int,
                      currentPlayerId: Int) {
 
   val numOfPlayer: Int = players.length
@@ -28,22 +29,30 @@ case class GameState(id: Int,
 
   def updateStatus(status: GameStatus): GameState = copy(status = status)
 
+  def movePlayer: GameState = copy(previousPlayerId = currentPlayerId,
+    currentPlayerId = nextPlayer(currentPlayerId, numOfPlayer, direction))
+
   def reverse: GameState = {
     val direction = this.direction.reverse
-    copy(direction = direction, currentPlayerId = nextPlayer(currentPlayerId, numOfPlayer, direction))
+    copy(direction = direction, previousPlayerId = currentPlayerId,
+      currentPlayerId = nextPlayer(currentPlayerId, numOfPlayer, direction))
   }
 
   def skip(num: Int): GameState = {
-    val currentPlayer =
+    val currentPlayerId =
       direction match {
         case PlayDirection.Clockwise => this.currentPlayerId + num
         case PlayDirection.CounterClockwise => this.currentPlayerId - num
       }
-    copy(currentPlayerId = nextPlayer(currentPlayer, numOfPlayer, direction))
+    copy(previousPlayerId = this.currentPlayerId, currentPlayerId = nextPlayer(currentPlayerId, numOfPlayer, direction))
   }
 
+  def activateCurrentPlayer: GameState = copy(currentPlayerId = nextPlayer(previousPlayerId, numOfPlayer, direction))
+
+  def resetCurrentPlayer: GameState = copy(currentPlayerId = -1)
+
   def updateDealer(dealerId: Int): GameState =
-    copy(direction = DefaultPlayDirection, dealerId = dealerId, currentPlayerId = nextPlayer(dealerId, numOfPlayer))
+    copy(direction = DefaultPlayDirection, dealerId = dealerId, previousPlayerId = dealerId, currentPlayerId = -1)
 
   def updatePoint(playerId: Int, points: Int): GameState = {
     var updatedPlayer = this.players(playerId)
@@ -60,8 +69,6 @@ case class GameState(id: Int,
       currentPlayerId = nextPlayer(dealerId, numOfPlayer))
   }
 
-  def movePlayer: GameState = copy(currentPlayerId = nextPlayer(currentPlayerId, numOfPlayer, direction))
-
 }
 
 object GameState {
@@ -70,14 +77,16 @@ object GameState {
             status: GameStatus,
             players: Array[Player],
             dealerId: Int,
-            currentPlayer: Int): GameState = new GameState(id, direction, status, players, dealerId, currentPlayer)
+            previousPlayer: Int,
+            currentPlayer: Int): GameState =
+    new GameState(id, direction, status, players, dealerId, previousPlayer, currentPlayer)
 
   def apply(id: Int,
             direction: PlayDirection,
             status: GameStatus,
             players: Array[Player],
             dealerId: Int): GameState =
-    GameState(id, direction, status, players, dealerId, nextPlayer(dealerId, players.length, direction))
+    GameState(id, direction, status, players, dealerId, dealerId, -1)
 
-  def apply(id: Int): GameState = GameState(id, DefaultPlayDirection, GameStatus.Initiated, Array.empty, 0, 0)
+  def apply(id: Int): GameState = GameState(id, DefaultPlayDirection, GameStatus.Initiated, Array.empty, 0, 0, -1)
 }

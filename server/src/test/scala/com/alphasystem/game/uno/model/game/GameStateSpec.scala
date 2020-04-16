@@ -12,7 +12,8 @@ class GameStateSpec
 
   "Create an empty game state" in {
     gameState.dealerId shouldBe 0
-    gameState.currentPlayerId shouldBe 0
+    gameState.previousPlayerId shouldBe 0
+    gameState.currentPlayerId shouldBe -1
     gameState.direction shouldBe PlayDirection.Clockwise
     gameState.status shouldBe GameStatus.Initiated
     gameState.players shouldBe empty
@@ -46,14 +47,16 @@ class GameStateSpec
     gameState.numOfPlayer shouldBe 5
 
     gameState.dealerId shouldBe 0
-    gameState.currentPlayerId shouldBe 0
+    gameState.previousPlayerId shouldBe 0
+    gameState.currentPlayerId shouldBe -1
     gameState.direction shouldBe PlayDirection.Clockwise
   }
 
   "Update dealer will set current player" in {
-    gameState = gameState.updateDealer(3)
+    gameState = gameState.updateDealer(3).activateCurrentPlayer
     gameState.numOfPlayer shouldBe 5
     gameState.dealerId shouldBe 3
+    gameState.previousPlayerId shouldBe 3
     gameState.currentPlayerId shouldBe 4
     gameState.direction shouldBe PlayDirection.Clockwise
   }
@@ -90,6 +93,28 @@ class GameStateSpec
 
     gameState = gameState.skip(1)
     gameState.currentPlayerId shouldBe 4
+  }
+
+  "Reset and activate player" in {
+    gameState = gameState.resetCurrentPlayer
+    gameState.previousPlayerId shouldBe 2
+    gameState.currentPlayerId shouldBe -1
+
+    gameState = gameState.activateCurrentPlayer
+    gameState.previousPlayerId shouldBe 2
+    gameState.currentPlayerId shouldBe 3
+
+    gameState = gameState.movePlayer
+    gameState.previousPlayerId shouldBe 3
+    gameState.currentPlayerId shouldBe 4
+
+    gameState = gameState.skip(1)
+    gameState.previousPlayerId shouldBe 4
+    gameState.currentPlayerId shouldBe 1
+
+    gameState = gameState.reverse
+    gameState.previousPlayerId shouldBe 1
+    gameState.currentPlayerId shouldBe 0
   }
 
   "Update a player points will move dealer" in {
