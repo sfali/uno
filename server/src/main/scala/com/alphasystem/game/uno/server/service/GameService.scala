@@ -1,9 +1,9 @@
 package com.alphasystem.game.uno.server.service
 
 import akka.actor.typed.ActorRef
-import com.alphasystem.game.uno.model.{Event, ResponseEvent}
 import com.alphasystem.game.uno.model.game.GameState
-import com.alphasystem.game.uno.model.response.{Message, MessageCode, PlayerJoined, ResponseEnvelope, ResponseType}
+import com.alphasystem.game.uno.model.response._
+import com.alphasystem.game.uno.model.{Event, ResponseEvent}
 import org.slf4j.LoggerFactory
 
 class GameService(gameId: Int) {
@@ -21,12 +21,12 @@ class GameService(gameId: Int) {
     playerToActorRefs += player.position -> replyTo
     playerToActorRefs
       .foreach {
-        case (id, actorRef) =>
+        case (position, actorRef) =>
           val event =
-            if (id == player.position)
-              ResponseEvent(ResponseEnvelope(id, ResponseType.GameJoined, PlayerJoined(player, otherPlayers)))
+            if (position == player.position)
+              ResponseEvent(ResponseEnvelope(ResponseType.GameJoined, PlayerJoined(player, otherPlayers)))
             else
-              ResponseEvent(ResponseEnvelope(id, ResponseType.NewPlayerJoined, PlayerJoined(player)))
+              ResponseEvent(ResponseEnvelope(ResponseType.NewPlayerJoined, PlayerJoined(player)))
           actorRef ! event
       }
     _state.reachedCapacity
@@ -40,7 +40,7 @@ class GameService(gameId: Int) {
       _state.players.filterNot(_.name == name).map(_.position)
         .foreach {
           position =>
-            val envelope = ResponseEnvelope(position, ResponseType.ConfirmationMessage, Message(name,
+            val envelope = ResponseEnvelope(ResponseType.ConfirmationMessage, Message(name,
               MessageCode.CanStartGame))
             playerToActorRefs(position) ! ResponseEvent(envelope)
         }
@@ -63,7 +63,7 @@ class GameService(gameId: Int) {
     _state.player(name) match {
       case Some(player) =>
         val position = player.position
-        val envelope = ResponseEnvelope(position, ResponseType.ErrorMessage, Message(name, MessageCode.IllegalAccess))
+        val envelope = ResponseEnvelope(ResponseType.ErrorMessage, Message(name, MessageCode.IllegalAccess))
         playerToActorRefs(position) ! ResponseEvent(envelope)
       case None => // do nothing
     }

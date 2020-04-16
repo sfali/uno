@@ -1,14 +1,13 @@
 package com.alphasystem.game.uno.model.request
 
 import io.circe._
-import io.circe.generic.auto._
 
-case class RequestEnvelope(position: Int, requestType: RequestType, payload: RequestPayload)
+case class RequestEnvelope(requestType: RequestType, payload: RequestPayload)
 
 object RequestEnvelope {
   implicit val RequestEnvelopeDecoder: Decoder[RequestEnvelope] =
-    Decoder.forProduct3("position", "type", "payload")(RequestEnvelope.apply)
+    Decoder.forProduct2("type", "payload")(RequestEnvelope.apply)
 
   implicit val RequestEnvelopeEncoder: Encoder[RequestEnvelope] =
-    Encoder.forProduct3("position", "type", "payload")(me => (me.position, me.requestType, me.payload))
+    Encoder.forProduct2("type", "payload")(me => (me.requestType, me.payload))
 }

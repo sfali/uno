@@ -107,24 +107,24 @@ class GameSpec
 
   private def validateStartGame(clients: Array[WSProbe]): Unit = {
     val client = clients(0)
-    val text = RequestEnvelope(0, RequestType.StartGame, request.Empty()).asJson.noSpaces
+    val text = RequestEnvelope(RequestType.StartGame, request.Empty()).asJson.noSpaces
     client.sendMessage(text)
     client.expectNoMessage()
     (1 until clients.length)
       .foreach {
         pos =>
-          val response = ResponseEnvelope(pos, ResponseType.ConfirmationMessage, Message(players(0).name,
+          val response = ResponseEnvelope(ResponseType.ConfirmationMessage, Message(players(0).name,
             MessageCode.CanStartGame))
           clients(pos).expectMessage(response.asJson.noSpaces)
       }
   }
 
   private def validateStartGameConfirmation(clients: Array[WSProbe]): Unit = {
-    clients(2).sendMessage(RequestEnvelope(2, RequestType.StartGameRejected, request.Empty()).asJson.noSpaces)
-    val requestEnvelope = RequestEnvelope(1, RequestType.StartGameApproved, request.Empty())
+    clients(2).sendMessage(RequestEnvelope(RequestType.StartGameRejected, request.Empty()).asJson.noSpaces)
+    val requestEnvelope = RequestEnvelope(RequestType.StartGameApproved, request.Empty())
     clients(1).sendMessage(requestEnvelope.asJson.noSpaces)
-    clients(3).sendMessage(requestEnvelope.copy(position = 3).asJson.noSpaces)
-    clients(4).sendMessage(requestEnvelope.copy(position = 4).asJson.noSpaces)
+    clients(3).sendMessage(requestEnvelope.asJson.noSpaces)
+    clients(4).sendMessage(requestEnvelope.asJson.noSpaces)
     clients(0).expectNoMessage()
   }
 
@@ -149,14 +149,14 @@ class GameSpec
   private def validateGameJoined(client: WSProbe,
                                  player: Player,
                                  otherPlayers: List[Player]): Unit = {
-    val responseEnvelope = ResponseEnvelope(player.position, ResponseType.GameJoined, PlayerJoined(player, otherPlayers))
+    val responseEnvelope = ResponseEnvelope(ResponseType.GameJoined, PlayerJoined(player, otherPlayers))
     client.expectMessage(responseEnvelope.asJson.noSpaces)
   }
 
   private def validatePlayerJoined(client: WSProbe,
                                    position: Int,
                                    player: Player): Unit = {
-    val responseEnvelope = ResponseEnvelope(position, ResponseType.NewPlayerJoined, PlayerJoined(player))
+    val responseEnvelope = ResponseEnvelope(ResponseType.NewPlayerJoined, PlayerJoined(player))
     client.expectMessage(responseEnvelope.asJson.noSpaces)
   }
 
