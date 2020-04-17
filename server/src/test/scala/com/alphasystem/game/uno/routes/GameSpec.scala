@@ -127,7 +127,12 @@ class GameSpec
     clients(1).sendMessage(requestEnvelope.asJson.noSpaces)
     clients(3).sendMessage(requestEnvelope.asJson.noSpaces)
     clients(4).sendMessage(requestEnvelope.asJson.noSpaces)
-    clients(0).expectNoMessage()
+    val responseEnvelope = ResponseEnvelope(ResponseType.InitiatingToss, Empty()).asJson.noSpaces
+    clients(0).expectMessage(responseEnvelope)
+    clients(1).expectMessage(responseEnvelope)
+    clients(2).expectMessage(responseEnvelope)
+    clients(3).expectMessage(responseEnvelope)
+    clients(4).expectMessage(responseEnvelope)
   }
 
   private def validateJoinGame(gameId: Int,

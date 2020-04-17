@@ -150,10 +150,45 @@ class GameBehavior private(context: ActorContext[Command],
 
       case ConfirmationApproval(name, approved) =>
         if (gameService.startGameApprovals(name, approved)) {
-          // TODO: moved to toss
-          timer.cancel(WaitForConfirmations.getClass.getSimpleName)
           context.log.info("Start game request approved")
+          timer.cancel(WaitForConfirmations.getClass.getSimpleName)
+          context.self ! NotifyStartGame
+          performToss
+        } else Behaviors.same
+
+      case GetState(replyTo) =>
+        replyTo ! StateInfo(gameService.state)
+        Behaviors.same
+
+      case PlayerLeft(name) =>
+        // TODO:
+        context.log.warn("Player {} is left the game", name)
+        Behaviors.same
+
+      case Fail(name, ex) =>
+        // TODO:
+        context.log.error("Exception occurred in up stream", ex)
+        Behaviors.same
+
+      case Idle =>
+        if (GameStatus.Started == gameService.state.status) {
+          context.log.warn("Did not get response from player '{}' in last one minute", gameService.state.currentPlayer.name)
         }
+        Behaviors.same
+
+      case Shutdown => Behaviors.stopped
+
+      case other: GameCommand =>
+        // TODO: handle JoinGame separately
+        context.log.warn("Invalid command: {} in startGame from: {}", other.getClass.getSimpleName, other.name)
+        gameService.illegalAccess(other.name)
+        Behaviors.same
+    }
+
+  private def performToss: Behavior[Command] =
+    Behaviors.receiveMessagePartial {
+      case NotifyStartGame =>
+        gameService.notifyGameStart()
         Behaviors.same
 
       case GetState(replyTo) =>
@@ -283,6 +318,8 @@ object GameBehavior {
   final case object WaitForConfirmations extends Command
 
   final case class ConfirmationApproval(name: String, approved: Boolean) extends GameCommand
+
+  private final case object NotifyStartGame extends Command
 
   final case class PlayerLeft(name: String) extends GameCommand
 

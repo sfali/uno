@@ -1,7 +1,7 @@
 package com.alphasystem.game.uno.server.service
 
 import akka.actor.typed.ActorRef
-import com.alphasystem.game.uno.model.game.GameState
+import com.alphasystem.game.uno.model.game.{GameState, GameStatus}
 import com.alphasystem.game.uno.model.response._
 import com.alphasystem.game.uno.model.{Event, ResponseEvent}
 import org.slf4j.LoggerFactory
@@ -57,6 +57,16 @@ class GameService(gameId: Int)(implicit deckService: DeckService) {
       val approvalPercentage = (acceptedCount / playerToActorRefs.size) * 100
       approvalPercentage >= 50.0
     } else false
+  }
+
+  def notifyGameStart(): Unit = {
+    log.info("Updating game status to start")
+    _state = _state.updateStatus(GameStatus.Started)
+    playerToActorRefs
+      .foreach {
+        case (_, actorRef) =>
+          actorRef ! ResponseEvent(ResponseEnvelope(ResponseType.InitiatingToss, Empty()))
+      }
   }
 
   def illegalAccess(name: String): Unit =
