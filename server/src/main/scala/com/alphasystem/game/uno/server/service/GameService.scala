@@ -41,7 +41,7 @@ class GameService(gameId: Int)(implicit deckService: DeckService) {
         .foreach {
           position =>
             val envelope = ResponseEnvelope(ResponseType.ConfirmationMessage, Message(Some(name),
-              MessageCode.CanStartGame))
+              MessageCode.InitiateGame))
             playerToActorRefs(position) ! ResponseEvent(envelope)
         }
     }
