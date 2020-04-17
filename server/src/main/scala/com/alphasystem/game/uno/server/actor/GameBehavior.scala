@@ -7,7 +7,7 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityType
 import com.alphasystem.game.uno.model._
 import com.alphasystem.game.uno.model.game.GameStatus
 import com.alphasystem.game.uno.server.actor.GameBehavior.Command
-import com.alphasystem.game.uno.server.service.GameService
+import com.alphasystem.game.uno.server.service.{DeckService, GameService}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -16,6 +16,7 @@ class GameBehavior private(context: ActorContext[Command],
                            buffer: StashBuffer[Command],
                            timer: TimerScheduler[Command],
                            gameId: Int)
+                          (implicit deckService: DeckService)
   extends AbstractBehavior[Command](context) {
 
   import GameBehavior._
@@ -239,7 +240,8 @@ object GameBehavior {
 
   val EntityKey: EntityTypeKey[Command] = EntityTypeKey[Command]("UnoGame")
 
-  private def apply(gameId: Int): Behavior[Command] = {
+  private def apply(gameId: Int)
+                   (implicit deckService: DeckService): Behavior[Command] = {
     Behaviors.setup[Command] {
       context =>
         Behaviors.withStash[Command](10) {
@@ -251,7 +253,8 @@ object GameBehavior {
     }
   }
 
-  def init(system: ActorSystem[_]): ActorRef[ShardingEnvelope[Command]] =
+  def init(system: ActorSystem[_])
+          (implicit deckService: DeckService): ActorRef[ShardingEnvelope[Command]] =
     ClusterSharding(system)
       .init(Entity(EntityKey)
       (entityContext => GameBehavior(entityContext.entityId.toInt))

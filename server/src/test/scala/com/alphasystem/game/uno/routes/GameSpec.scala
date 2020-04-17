@@ -12,6 +12,7 @@ import com.alphasystem.game.uno.model.response._
 import com.alphasystem.game.uno.model.{Event, Player, StateInfo, request}
 import com.alphasystem.game.uno.server.Main.Guardian
 import com.alphasystem.game.uno.server.actor.GameBehavior
+import com.alphasystem.game.uno.server.service.FileBasedDeckService
 import com.alphasystem.game.uno.test._
 import io.circe.syntax._
 import org.scalatest.BeforeAndAfterAll
@@ -33,6 +34,7 @@ class GameSpec
   private implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(15, Seconds),
     interval = Span(500, Millis))
   private implicit val testTimeout: RouteTestTimeout = RouteTestTimeout(10.seconds)
+  private implicit val deckService: FileBasedDeckService = FileBasedDeckService()
 
   private val testKit = ActorTestKit("uno")
   private val probe = testKit.createTestProbe[Event]()

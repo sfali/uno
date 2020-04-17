@@ -6,7 +6,7 @@ import com.alphasystem.game.uno.model.response._
 import com.alphasystem.game.uno.model.{Event, ResponseEvent}
 import org.slf4j.LoggerFactory
 
-class GameService(gameId: Int) {
+class GameService(gameId: Int)(implicit deckService: DeckService) {
 
   private val log = LoggerFactory.getLogger(classOf[GameService])
   private var _state = GameState(gameId)
@@ -72,5 +72,5 @@ class GameService(gameId: Int) {
 }
 
 object GameService {
-  def apply(gameId: Int): GameService = new GameService(gameId)
+  def apply(gameId: Int)(implicit deckService: DeckService): GameService = new GameService(gameId)
 }
