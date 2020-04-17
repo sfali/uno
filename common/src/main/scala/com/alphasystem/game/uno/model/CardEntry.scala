@@ -1,10 +1,10 @@
 package com.alphasystem.game.uno.model
 
-import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
+import enumeratum.{CirceEnum, Enum, EnumEntry}
 
-sealed abstract class CardEntry(override val value: Int, val faceValue: Int) extends IntEnumEntry
+sealed abstract class CardEntry(val value: Int, val faceValue: Int) extends EnumEntry
 
-object CardEntry extends IntEnum[CardEntry] with IntCirceEnum[CardEntry] {
+object CardEntry extends Enum[CardEntry] with CirceEnum[CardEntry] {
   override def values: IndexedSeq[CardEntry] = findValues
 
   final case object Zero extends CardEntry(0, 0)

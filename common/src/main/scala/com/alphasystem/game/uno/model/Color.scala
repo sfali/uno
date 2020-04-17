@@ -1,8 +1,8 @@
 package com.alphasystem.game.uno.model
 
-import enumeratum.values.{IntCirceEnum, IntEnum, IntEnumEntry}
+import enumeratum.{CirceEnum, EnumEntry, Enum}
 
-sealed abstract class Color(override val value: Int, hexValue: String) extends IntEnumEntry {
+sealed abstract class Color(val value: Int, val hexValue: String) extends EnumEntry {
 
   /**
    * Contains all the cards except "WildDrawFour"
@@ -15,7 +15,7 @@ sealed abstract class Color(override val value: Int, hexValue: String) extends I
   val secondSuite: IndexedSeq[CardEntry] = CardEntry.values.dropRight(2).drop(1)
 }
 
-object Color extends IntEnum[Color] with IntCirceEnum[Color] {
+object Color extends Enum[Color] with CirceEnum[Color] {
   override def values: IndexedSeq[Color] = findValues
 
   final case object Red extends Color(1, "#FF0000")

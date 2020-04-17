@@ -1,434 +1,434 @@
 [
   {
-    "color" : 4,
-    "card" : 12
+    "color" : "Green",
+    "card" : "Skip"
   },
   {
-    "color" : 4,
-    "card" : 2
+    "color" : "Blue",
+    "card" : "One"
   },
   {
-    "color" : 3,
-    "card" : 11
+    "color" : "Blue",
+    "card" : "Three"
   },
   {
-    "color" : 2,
-    "card" : 3
+    "color" : "Green",
+    "card" : "Four"
   },
   {
-    "color" : 1,
-    "card" : 9
+    "color" : "Yellow",
+    "card" : "Reverse"
   },
   {
-    "color" : 3,
-    "card" : 1
+    "color" : "Blue",
+    "card" : "Seven"
   },
   {
-    "color" : 2,
-    "card" : 6
+    "color" : "Red",
+    "card" : "Skip"
   },
   {
-    "color" : 3,
-    "card" : 5
+    "color" : "Green",
+    "card" : "Seven"
   },
   {
-    "color" : 4,
-    "card" : 9
+    "color" : "Blue",
+    "card" : "Three"
   },
   {
-    "color" : 3,
-    "card" : 4
+    "color" : "Green",
+    "card" : "Skip"
   },
   {
-    "color" : 4,
-    "card" : 5
+    "color" : "Blue",
+    "card" : "Five"
   },
   {
-    "color" : 3,
-    "card" : 10
+    "color" : "Green",
+    "card" : "Four"
   },
   {
-    "color" : 1,
-    "card" : 5
+    "color" : "Red",
+    "card" : "Reverse"
   },
   {
-    "color" : 2,
-    "card" : 0
+    "color" : "Red",
+    "card" : "Two"
   },
   {
-    "color" : 1,
-    "card" : 1
+    "color" : "Yellow",
+    "card" : "DrawTwo"
   },
   {
-    "color" : 1,
-    "card" : 6
+    "color" : "Blue",
+    "card" : "Skip"
   },
   {
-    "color" : 2,
-    "card" : 4
+    "color" : "Green",
+    "card" : "Eight"
   },
   {
-    "color" : 4,
-    "card" : 12
+    "color" : "Blue",
+    "card" : "DrawTwo"
   },
   {
-    "color" : 4,
-    "card" : 4
+    "color" : "Symbol",
+    "card" : "WildDrawFour"
   },
   {
-    "color" : 2,
-    "card" : 8
+    "color" : "Green",
+    "card" : "DrawTwo"
   },
   {
-    "color" : 3,
-    "card" : 7
+    "color" : "Yellow",
+    "card" : "Three"
   },
   {
-    "color" : 1,
-    "card" : 11
+    "color" : "Yellow",
+    "card" : "Zero"
   },
   {
-    "color" : 2,
-    "card" : 7
+    "color" : "Symbol",
+    "card" : "Wild"
   },
   {
-    "color" : 5,
-    "card" : 13
+    "color" : "Red",
+    "card" : "Skip"
   },
   {
-    "color" : 3,
-    "card" : 12
+    "color" : "Yellow",
+    "card" : "Two"
   },
   {
-    "color" : 3,
-    "card" : 6
+    "color" : "Blue",
+    "card" : "Reverse"
   },
   {
-    "color" : 4,
-    "card" : 6
+    "color" : "Symbol",
+    "card" : "Wild"
   },
   {
-    "color" : 3,
-    "card" : 5
+    "color" : "Red",
+    "card" : "Three"
   },
   {
-    "color" : 2,
-    "card" : 12
+    "color" : "Blue",
+    "card" : "Nine"
   },
   {
-    "color" : 3,
-    "card" : 6
+    "color" : "Green",
+    "card" : "One"
   },
   {
-    "color" : 5,
-    "card" : 13
+    "color" : "Symbol",
+    "card" : "WildDrawFour"
   },
   {
-    "color" : 4,
-    "card" : 2
+    "color" : "Yellow",
+    "card" : "One"
   },
   {
-    "color" : 4,
-    "card" : 0
+    "color" : "Green",
+    "card" : "Two"
   },
   {
-    "color" : 4,
-    "card" : 3
+    "color" : "Blue",
+    "card" : "Eight"
   },
   {
-    "color" : 1,
-    "card" : 4
+    "color" : "Yellow",
+    "card" : "Seven"
   },
   {
-    "color" : 4,
-    "card" : 10
+    "color" : "Green",
+    "card" : "One"
   },
   {
-    "color" : 2,
-    "card" : 9
+    "color" : "Blue",
+    "card" : "Six"
   },
   {
-    "color" : 1,
-    "card" : 0
+    "color" : "Blue",
+    "card" : "Six"
   },
   {
-    "color" : 2,
-    "card" : 3
+    "color" : "Red",
+    "card" : "Seven"
   },
   {
-    "color" : 4,
-    "card" : 5
+    "color" : "Blue",
+    "card" : "Skip"
   },
   {
-    "color" : 4,
-    "card" : 7
+    "color" : "Red",
+    "card" : "Eight"
   },
   {
-    "color" : 2,
-    "card" : 5
+    "color" : "Blue",
+    "card" : "One"
   },
   {
-    "color" : 5,
-    "card" : 14
+    "color" : "Red",
+    "card" : "Nine"
   },
   {
-    "color" : 1,
-    "card" : 5
+    "color" : "Symbol",
+    "card" : "WildDrawFour"
   },
   {
-    "color" : 2,
-    "card" : 7
+    "color" : "Green",
+    "card" : "Six"
   },
   {
-    "color" : 1,
-    "card" : 12
+    "color" : "Yellow",
+    "card" : "Three"
   },
   {
-    "color" : 3,
-    "card" : 11
+    "color" : "Yellow",
+    "card" : "Seven"
   },
   {
-    "color" : 2,
-    "card" : 5
+    "color" : "Yellow",
+    "card" : "Five"
   },
   {
-    "color" : 1,
-    "card" : 12
+    "color" : "Red",
+    "card" : "Six"
   },
   {
-    "color" : 3,
-    "card" : 2
+    "color" : "Red",
+    "card" : "Six"
   },
   {
-    "color" : 1,
-    "card" : 9
+    "color" : "Yellow",
+    "card" : "Two"
   },
   {
-    "color" : 2,
-    "card" : 10
+    "color" : "Blue",
+    "card" : "Reverse"
   },
   {
-    "color" : 1,
-    "card" : 2
+    "color" : "Yellow",
+    "card" : "Skip"
   },
   {
-    "color" : 1,
-    "card" : 1
+    "color" : "Blue",
+    "card" : "Eight"
   },
   {
-    "color" : 3,
-    "card" : 1
+    "color" : "Green",
+    "card" : "Nine"
   },
   {
-    "color" : 1,
-    "card" : 10
+    "color" : "Yellow",
+    "card" : "Six"
   },
   {
-    "color" : 1,
-    "card" : 10
+    "color" : "Symbol",
+    "card" : "Wild"
   },
   {
-    "color" : 2,
-    "card" : 4
+    "color" : "Green",
+    "card" : "Zero"
   },
   {
-    "color" : 4,
-    "card" : 4
+    "color" : "Yellow",
+    "card" : "Five"
   },
   {
-    "color" : 3,
-    "card" : 9
+    "color" : "Yellow",
+    "card" : "Six"
   },
   {
-    "color" : 2,
-    "card" : 11
+    "color" : "Red",
+    "card" : "Four"
   },
   {
-    "color" : 3,
-    "card" : 10
+    "color" : "Green",
+    "card" : "Five"
   },
   {
-    "color" : 1,
-    "card" : 2
+    "color" : "Yellow",
+    "card" : "One"
   },
   {
-    "color" : 4,
-    "card" : 6
+    "color" : "Yellow",
+    "card" : "DrawTwo"
   },
   {
-    "color" : 4,
-    "card" : 1
+    "color" : "Green",
+    "card" : "Five"
   },
   {
-    "color" : 4,
-    "card" : 11
+    "color" : "Green",
+    "card" : "DrawTwo"
   },
   {
-    "color" : 1,
-    "card" : 8
+    "color" : "Yellow",
+    "card" : "Nine"
   },
   {
-    "color" : 3,
-    "card" : 9
+    "color" : "Red",
+    "card" : "Three"
   },
   {
-    "color" : 5,
-    "card" : 14
+    "color" : "Green",
+    "card" : "Two"
   },
   {
-    "color" : 1,
-    "card" : 7
+    "color" : "Red",
+    "card" : "Seven"
   },
   {
-    "color" : 2,
-    "card" : 9
+    "color" : "Blue",
+    "card" : "Four"
   },
   {
-    "color" : 2,
-    "card" : 2
+    "color" : "Red",
+    "card" : "Zero"
   },
   {
-    "color" : 3,
-    "card" : 3
+    "color" : "Symbol",
+    "card" : "Wild"
   },
   {
-    "color" : 1,
-    "card" : 6
+    "color" : "Red",
+    "card" : "Nine"
   },
   {
-    "color" : 1,
-    "card" : 7
+    "color" : "Red",
+    "card" : "Four"
   },
   {
-    "color" : 5,
-    "card" : 14
+    "color" : "Green",
+    "card" : "Three"
   },
   {
-    "color" : 4,
-    "card" : 9
+    "color" : "Blue",
+    "card" : "Two"
   },
   {
-    "color" : 3,
-    "card" : 2
+    "color" : "Red",
+    "card" : "One"
   },
   {
-    "color" : 5,
-    "card" : 13
+    "color" : "Green",
+    "card" : "Eight"
   },
   {
-    "color" : 3,
-    "card" : 8
+    "color" : "Red",
+    "card" : "DrawTwo"
   },
   {
-    "color" : 2,
-    "card" : 11
+    "color" : "Red",
+    "card" : "Five"
   },
   {
-    "color" : 2,
-    "card" : 1
+    "color" : "Red",
+    "card" : "Eight"
   },
   {
-    "color" : 5,
-    "card" : 14
+    "color" : "Red",
+    "card" : "DrawTwo"
   },
   {
-    "color" : 2,
-    "card" : 8
+    "color" : "Red",
+    "card" : "One"
   },
   {
-    "color" : 4,
-    "card" : 3
+    "color" : "Green",
+    "card" : "Six"
   },
   {
-    "color" : 3,
-    "card" : 4
+    "color" : "Yellow",
+    "card" : "Skip"
   },
   {
-    "color" : 2,
-    "card" : 6
+    "color" : "Blue",
+    "card" : "Zero"
   },
   {
-    "color" : 3,
-    "card" : 8
+    "color" : "Yellow",
+    "card" : "Four"
   },
   {
-    "color" : 4,
-    "card" : 1
+    "color" : "Blue",
+    "card" : "Two"
   },
   {
-    "color" : 1,
-    "card" : 8
+    "color" : "Red",
+    "card" : "Reverse"
   },
   {
-    "color" : 4,
-    "card" : 11
+    "color" : "Blue",
+    "card" : "DrawTwo"
   },
   {
-    "color" : 3,
-    "card" : 3
+    "color" : "Yellow",
+    "card" : "Eight"
   },
   {
-    "color" : 4,
-    "card" : 8
+    "color" : "Blue",
+    "card" : "Seven"
   },
   {
-    "color" : 2,
-    "card" : 10
+    "color" : "Green",
+    "card" : "Three"
   },
   {
-    "color" : 4,
-    "card" : 10
+    "color" : "Yellow",
+    "card" : "Four"
   },
   {
-    "color" : 3,
-    "card" : 7
+    "color" : "Blue",
+    "card" : "Five"
   },
   {
-    "color" : 2,
-    "card" : 12
+    "color" : "Blue",
+    "card" : "Nine"
   },
   {
-    "color" : 3,
-    "card" : 0
+    "color" : "Green",
+    "card" : "Seven"
   },
   {
-    "color" : 1,
-    "card" : 3
+    "color" : "Symbol",
+    "card" : "WildDrawFour"
   },
   {
-    "color" : 1,
-    "card" : 11
+    "color" : "Yellow",
+    "card" : "Nine"
   },
   {
-    "color" : 1,
-    "card" : 4
+    "color" : "Green",
+    "card" : "Nine"
   },
   {
-    "color" : 2,
-    "card" : 2
+    "color" : "Yellow",
+    "card" : "Eight"
   },
   {
-    "color" : 2,
-    "card" : 1
+    "color" : "Green",
+    "card" : "Reverse"
   },
   {
-    "color" : 4,
-    "card" : 7
+    "color" : "Yellow",
+    "card" : "Reverse"
   },
   {
-    "color" : 3,
-    "card" : 12
+    "color" : "Blue",
+    "card" : "Four"
   },
   {
-    "color" : 1,
-    "card" : 3
+    "color" : "Red",
+    "card" : "Two"
   },
   {
-    "color" : 5,
-    "card" : 13
+    "color" : "Green",
+    "card" : "Reverse"
   },
   {
-    "color" : 4,
-    "card" : 8
+    "color" : "Red",
+    "card" : "Five"
   }
 ]
