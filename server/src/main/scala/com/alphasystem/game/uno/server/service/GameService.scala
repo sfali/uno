@@ -1,7 +1,7 @@
 package com.alphasystem.game.uno.server.service
 
 import akka.actor.typed.ActorRef
-import com.alphasystem.game.uno.model.game.GameState
+import com.alphasystem.game.uno.model.game.{GameState, GameStatus}
 import com.alphasystem.game.uno.model.response._
 import com.alphasystem.game.uno.model.{Event, ResponseEvent}
 import org.slf4j.LoggerFactory
@@ -47,15 +47,17 @@ class GameService(gameId: Int)(implicit deckService: DeckService) {
     }
   }
 
-  def startGameApprovals(name: String, approved: Boolean): Boolean = {
+  def startGameApprovals(name: String, approvalReply: Boolean): Boolean = {
     val position = _state.position(name).getOrElse(-1)
     if (position >= 0) {
-      val s = if (approved) "approved " else "rejected"
+      val s = if (approvalReply) "approved " else "rejected"
       log.info("Start game request is {} by {}", s, name)
-      confirmationApprovals += (position -> approved)
+      confirmationApprovals += (position -> approvalReply)
       val acceptedCount = confirmationApprovals.count(_._2 == true).toDouble
       val approvalPercentage = (acceptedCount / playerToActorRefs.size) * 100
-      approvalPercentage >= 50.0
+      val approved = approvalPercentage >= 50.0
+      if(approved) _state = _state.updateStatus(GameStatus.Started)
+      approved
     } else false
   }
 
