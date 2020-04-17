@@ -1,7 +1,7 @@
 package com.alphasystem.game.uno.server.service
 
 import akka.actor.typed.ActorRef
-import com.alphasystem.game.uno.model.game.{GameState, GameStatus}
+import com.alphasystem.game.uno.model.game.GameState
 import com.alphasystem.game.uno.model.response._
 import com.alphasystem.game.uno.model.{Event, ResponseEvent}
 import org.slf4j.LoggerFactory
@@ -40,24 +40,22 @@ class GameService(gameId: Int)(implicit deckService: DeckService) {
       _state.players.filterNot(_.name == name).map(_.position)
         .foreach {
           position =>
-            val envelope = ResponseEnvelope(ResponseType.ConfirmationMessage, Message(name,
+            val envelope = ResponseEnvelope(ResponseType.ConfirmationMessage, Message(Some(name),
               MessageCode.CanStartGame))
             playerToActorRefs(position) ! ResponseEvent(envelope)
         }
     }
   }
 
-  def startGameApprovals(name: String, approvalReply: Boolean): Boolean = {
+  def startGameApprovals(name: String, approved: Boolean): Boolean = {
     val position = _state.position(name).getOrElse(-1)
     if (position >= 0) {
-      val s = if (approvalReply) "approved " else "rejected"
+      val s = if (approved) "approved " else "rejected"
       log.info("Start game request is {} by {}", s, name)
-      confirmationApprovals += (position -> approvalReply)
+      confirmationApprovals += (position -> approved)
       val acceptedCount = confirmationApprovals.count(_._2 == true).toDouble
       val approvalPercentage = (acceptedCount / playerToActorRefs.size) * 100
-      val approved = approvalPercentage >= 50.0
-      if(approved) _state = _state.updateStatus(GameStatus.Started)
-      approved
+      approvalPercentage >= 50.0
     } else false
   }
 
@@ -65,7 +63,7 @@ class GameService(gameId: Int)(implicit deckService: DeckService) {
     _state.player(name) match {
       case Some(player) =>
         val position = player.position
-        val envelope = ResponseEnvelope(ResponseType.ErrorMessage, Message(name, MessageCode.IllegalAccess))
+        val envelope = ResponseEnvelope(ResponseType.ErrorMessage, Message(code = MessageCode.IllegalAccess))
         playerToActorRefs(position) ! ResponseEvent(envelope)
       case None => // do nothing
     }
