@@ -59,7 +59,7 @@ class GameService(gameId: Int)(implicit deckService: DeckService) {
 
   def notifyGameStart(): Unit = {
     log.info("Updating game status to start")
-    _state = _state.updateStatus(GameStatus.Started)
+    _state = _state.updateStatus(GameStatus.TossInitiated)
     playerToActorRefs
       .foreach {
         case (_, actorRef) =>

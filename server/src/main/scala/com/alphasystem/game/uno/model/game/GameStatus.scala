@@ -9,9 +9,14 @@ object GameStatus extends Enum[GameStatus] with CirceEnum[GameStatus] {
 
   final case object Initiated extends GameStatus
 
-  final case object Started extends GameStatus
+  final case object TossInitiated extends GameStatus
 
   final case object Dealing extends GameStatus
 
+  final case object Started extends GameStatus
+
+  final case object RoundFinished extends GameStatus
+
   final case object Finished extends GameStatus
+
 }
