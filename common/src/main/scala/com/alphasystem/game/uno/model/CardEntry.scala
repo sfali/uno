@@ -2,7 +2,9 @@ package com.alphasystem.game.uno.model
 
 import enumeratum.{CirceEnum, Enum, EnumEntry}
 
-sealed abstract class CardEntry(val value: Int, val faceValue: Int) extends EnumEntry
+sealed abstract class CardEntry(val value: Int, val faceValue: Int) extends EnumEntry with Ordered[CardEntry] {
+  override def compare(that: CardEntry): Int = faceValue.compareTo(that.faceValue)
+}
 
 object CardEntry extends Enum[CardEntry] with CirceEnum[CardEntry] {
   override def values: IndexedSeq[CardEntry] = findValues
