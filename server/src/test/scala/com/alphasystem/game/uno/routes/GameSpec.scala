@@ -115,8 +115,7 @@ class GameSpec
     (1 until clients.length)
       .foreach {
         pos =>
-          val response = ResponseEnvelope(ResponseType.ConfirmationMessage, Message(Some(players(0).name),
-            MessageCode.InitiateGame))
+          val response = ResponseEnvelope(ResponseType.StartGameRequested, Empty())
           clients(pos).expectMessage(response.asJson.noSpaces)
       }
   }

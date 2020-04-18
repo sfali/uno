@@ -12,7 +12,9 @@ final case class Empty() extends ResponsePayload
 
 final case class PlayerJoined(player: Player, otherPlayers: List[Player] = Nil) extends ResponsePayload
 
-final case class Message(playerName: Option[String] = None, code: MessageCode) extends ResponsePayload
+final case class Message(playerName: Option[String] = None,
+                         code: MessageCode,
+                         text: Option[String] = None) extends ResponsePayload
 
 final case class ChatMessage(playerName: String, message: String) extends ResponsePayload
 
@@ -27,7 +29,7 @@ object ResponsePayload {
       case event@Empty() => event.asJson
       case event@TossResult(_) => event.asJson
       case event@PlayerJoined(_, _) => event.asJson
-      case event@Message(_, _) => event.asJson
+      case event@Message(_, _, _) => event.asJson
       case event@ChatMessage(_, _) => event.asJson
       case event@Cards(_, _) => event.asJson
     }

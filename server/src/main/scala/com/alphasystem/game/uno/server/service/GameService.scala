@@ -40,9 +40,7 @@ class GameService(gameId: Int)(implicit deckService: DeckService) {
       _state.players.filterNot(_.name == name).map(_.position)
         .foreach {
           position =>
-            val envelope = ResponseEnvelope(ResponseType.ConfirmationMessage, Message(Some(name),
-              MessageCode.InitiateGame))
-            playerToActorRefs(position) ! ResponseEvent(envelope)
+            playerToActorRefs(position) ! ResponseEvent(ResponseEnvelope(ResponseType.StartGameRequested, Empty()))
         }
     }
   }
@@ -73,7 +71,7 @@ class GameService(gameId: Int)(implicit deckService: DeckService) {
     _state.player(name) match {
       case Some(player) =>
         val position = player.position
-        val envelope = ResponseEnvelope(ResponseType.ErrorMessage, Message(code = MessageCode.IllegalAccess))
+        val envelope = ResponseEnvelope(ResponseType.IllegalAccess, Empty())
         playerToActorRefs(position) ! ResponseEvent(envelope)
       case None => // do nothing
     }
