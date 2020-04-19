@@ -1,6 +1,7 @@
 package com.alphasystem.game.uno.server.service
 
-import java.nio.file.{Files, Paths}
+import java.io.File
+import java.nio.file.Files
 
 import com.alphasystem.game.uno.model.{Card, Deck}
 import io.circe.generic.auto._
@@ -15,8 +16,8 @@ class FileBasedDeckService extends DeckService {
   def fileName_=(fileName: String): Unit = _fileName = fileName
 
   override def create(): Deck = {
-    val bytes = Files.readAllBytes(Paths.get(fileName))
-    decode[List[Card]](new String(bytes)) match {
+    val path = new File(getClass.getClassLoader.getResource(fileName).toURI).toPath
+    decode[List[Card]](new String( Files.readAllBytes(path))) match {
       case Left(error) => throw error
       case Right(cards) => Deck(cards)
     }

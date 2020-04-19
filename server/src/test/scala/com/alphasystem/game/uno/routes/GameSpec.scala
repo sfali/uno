@@ -6,10 +6,10 @@ import akka.cluster.sharding.typed.ShardingEnvelope
 import akka.cluster.typed.{Cluster, Join}
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest, WSProbe}
-import com.alphasystem.game.uno.model.game.GameStatus
+import com.alphasystem.game.uno.model._
+import com.alphasystem.game.uno.model.game.{GameState, GameStatus}
 import com.alphasystem.game.uno.model.request.{RequestEnvelope, RequestType}
 import com.alphasystem.game.uno.model.response._
-import com.alphasystem.game.uno.model.{Event, Player, StateInfo, request}
 import com.alphasystem.game.uno.server.Main.Guardian
 import com.alphasystem.game.uno.server.actor.GameBehavior
 import com.alphasystem.game.uno.server.service.FileBasedDeckService
@@ -34,18 +34,18 @@ class GameSpec
   private implicit val defaultPatience: PatienceConfig = PatienceConfig(timeout = Span(15, Seconds),
     interval = Span(500, Millis))
   private implicit val testTimeout: RouteTestTimeout = RouteTestTimeout(10.seconds)
-  private implicit val deckService: FileBasedDeckService = FileBasedDeckService()
+  private val deckService: FileBasedDeckService = FileBasedDeckService()
 
   private val testKit = ActorTestKit("uno")
   private val probe = testKit.createTestProbe[Event]()
-  private val players = (0 to 4).map(createPlayer).toArray
-  private lazy val gameActorRef = GameBehavior.init(testKit.system)
+  private val players = (0 to 4).map(pos => createPlayer(pos)).toArray
+  private lazy val gameActorRef = GameBehavior.init(testKit.system, deckService)
   private lazy val gameRoute = GameRoute(gameActorRef)
 
   override protected def beforeAll(): Unit = {
     super.beforeAll()
 
-    testKit.spawn[Nothing](Guardian(), "guardian")
+    testKit.spawn[Nothing](Guardian(deckService), "guardian")
     val system = testKit.system
     Cluster(system).manager ! Join(Cluster(system).selfMember.address)
     eventually(PatienceConfiguration.Timeout(10.seconds)) {
@@ -72,6 +72,10 @@ class GameSpec
 
   "Start game" in {
     val gameId = 1001
+    val expectedGameState =
+      players.foldLeft(GameState(gameId)) {
+        (state, player) => state.addPlayer(player.name)
+      }
     val clients = Array(WSProbe(), WSProbe(), WSProbe(), WSProbe(), WSProbe())
     WS(uri(players(0), gameId), clients(0).flow) ~> gameRoute ~> check {
       validateJoinGame(0, clients)
@@ -85,6 +89,8 @@ class GameSpec
               validateJoinGame(4, clients)
               validateStartGame(clients)
               validateStartGameConfirmation(clients)
+              validatePerformToss(clients)
+              validateGameState(gameId, expectedGameState.updateStatus(GameStatus.Started))
               clients.foreach(_.sendCompletion())
             } // end of player 5
           } // // end of player 4
@@ -95,16 +101,26 @@ class GameSpec
 
   "Check game state" in {
     val gameId = 1000
-    gameActorRef ! ShardingEnvelope(gameId.toString, GameBehavior.GetState(probe.ref))
-    val gameState = probe.receiveMessage().asInstanceOf[StateInfo].state
+    val gameState = getGameState(gameId)
     gameState.id shouldBe gameId
     gameState.players.toList shouldBe players.toList
     gameState.status shouldBe GameStatus.Initiated
   }
 
+  private def getGameState(gameId: Int) = {
+    gameActorRef ! ShardingEnvelope(gameId.toString, GameBehavior.GetState(probe.ref))
+    probe.receiveMessage().asInstanceOf[StateInfo].state
+  }
+
+  private def validateGameState(gameId: Int, expected: GameState) = {
+    val gameState = getGameState(gameId)
+    gameState.id shouldBe expected.id
+    gameState.status shouldBe expected.status
+  }
+
   private def validateJoinGame(position: Int, clients: Array[WSProbe]): Unit = {
     validateGameJoined(clients(position), players(position), playersAlreadyJoined(position, players))
-    (0 until position).foreach(pos => validatePlayerJoined(clients(pos), pos, players(position)))
+    (0 until position).foreach(pos => validatePlayerJoined(clients(pos), players(position)))
   }
 
   private def validateStartGame(clients: Array[WSProbe]): Unit = {
@@ -126,12 +142,41 @@ class GameSpec
     clients(1).sendMessage(requestEnvelope.asJson.noSpaces)
     clients(3).sendMessage(requestEnvelope.asJson.noSpaces)
     clients(4).sendMessage(requestEnvelope.asJson.noSpaces)
-    val responseEnvelope = ResponseEnvelope(ResponseType.InitiatingToss, Empty()).asJson.noSpaces
-    clients(0).expectMessage(responseEnvelope)
-    clients(1).expectMessage(responseEnvelope)
-    clients(2).expectMessage(responseEnvelope)
-    clients(3).expectMessage(responseEnvelope)
-    clients(4).expectMessage(responseEnvelope)
+    val text = ResponseEnvelope(ResponseType.InitiatingToss, Empty()).asJson.noSpaces
+    clients.foreach(client => client.expectMessage(text))
+  }
+
+  private def validatePerformToss(clients: Array[WSProbe]): Unit = {
+    deckService.fileName = "toss-deck.json"
+
+    var tossResult = TossResult(
+      Cards(Some("Player1"), Card(Color.Blue, CardEntry.Five) :: Nil) ::
+        Cards(Some("Player2"), Card(Color.Red, CardEntry.Four) :: Nil) ::
+        Cards(Some("Player3"), Card(Color.Red, CardEntry.Eight) :: Nil) ::
+        Cards(Some("Player4"), Card(Color.Yellow, CardEntry.Two) :: Nil) ::
+        Cards(Some("Player5"), Card(Color.Yellow, CardEntry.Eight) :: Nil) ::
+        Nil)
+    var responseEnvelope = ResponseEnvelope(ResponseType.TossResult, tossResult)
+    clients.foreach(client => client.expectNoMessage(3.seconds))
+    clients.foreach(client => client.expectMessage(responseEnvelope.asJson.noSpaces))
+
+    tossResult = TossResult(
+      Cards(Some("Player3"), Card(Color.Yellow, CardEntry.Six) :: Nil) ::
+        Cards(Some("Player5"), Card(Color.Green, CardEntry.Six) :: Nil) ::
+        Nil)
+    responseEnvelope = ResponseEnvelope(ResponseType.TossResult, tossResult)
+    clients.foreach(client => client.expectNoMessage(3.seconds))
+    clients(2).expectMessage(responseEnvelope.asJson.noSpaces)
+    clients(4).expectMessage(responseEnvelope.asJson.noSpaces)
+
+    tossResult = TossResult(
+      Cards(Some("Player3"), Card(Color.Green, CardEntry.Two) :: Nil) ::
+        Cards(Some("Player5"), Card(Color.Yellow, CardEntry.DrawTwo) :: Nil) ::
+        Nil)
+    responseEnvelope = ResponseEnvelope(ResponseType.TossResult, tossResult)
+    clients.foreach(client => client.expectNoMessage(3.seconds))
+    clients(2).expectMessage(responseEnvelope.asJson.noSpaces)
+    clients(4).expectMessage(responseEnvelope.asJson.noSpaces)
   }
 
   private def validateJoinGame(gameId: Int,
@@ -144,7 +189,7 @@ class GameSpec
       validateGameJoined(client, player, otherPLayers)
       otherPLayers.map(_.position)
         .foreach {
-          pos => validatePlayerJoined(wsClients(pos), pos, player)
+          pos => validatePlayerJoined(wsClients(pos), player)
         }
     }
   }
@@ -160,7 +205,6 @@ class GameSpec
   }
 
   private def validatePlayerJoined(client: WSProbe,
-                                   position: Int,
                                    player: Player): Unit = {
     val responseEnvelope = ResponseEnvelope(ResponseType.NewPlayerJoined, PlayerJoined(player))
     client.expectMessage(responseEnvelope.asJson.noSpaces)

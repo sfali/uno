@@ -18,6 +18,8 @@ object ResponseType extends Enum[ResponseType] with CirceEnum[ResponseType] {
 
   final case object InitiatingToss extends ResponseType
 
+  final case object TossResult extends ResponseType
+
   final case object IllegalAccess extends ResponseType
 
   final case object InformationMessage extends ResponseType

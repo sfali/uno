@@ -13,15 +13,13 @@ object Main {
 
   object Guardian {
 
-    def apply(): Behavior[Nothing] =
+    def apply(deckService: DeckService): Behavior[Nothing] =
       Behaviors.setup[Nothing] {
         context =>
           context.log.info("Initializing Guardian")
 
-          implicit val deckService: DeckService = DeckService()
-
           Cluster(context.system)
-          GameBehavior.init(context.system)
+          GameBehavior.init(context.system, deckService)
 
           Behaviors.receiveMessage[Nothing] {
             _ => Behaviors.same

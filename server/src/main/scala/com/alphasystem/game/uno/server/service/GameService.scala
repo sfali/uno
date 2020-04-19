@@ -1,17 +1,19 @@
 package com.alphasystem.game.uno.server.service
 
 import akka.actor.typed.ActorRef
-import com.alphasystem.game.uno.model.game.{GameState, GameStatus}
+import com.alphasystem.game.uno.model.game.{GameState, GameStatus, PlayDirection}
 import com.alphasystem.game.uno.model.response._
-import com.alphasystem.game.uno.model.{Event, ResponseEvent}
+import com.alphasystem.game.uno.model.{Deck, Event, ResponseEvent}
 import org.slf4j.LoggerFactory
+import com.alphasystem.game.uno._
 
-class GameService(gameId: Int)(implicit deckService: DeckService) {
+class GameService(gameId: Int, deckService: DeckService) {
 
   private val log = LoggerFactory.getLogger(classOf[GameService])
   private var _state = GameState(gameId)
   private var playerToActorRefs = Map.empty[Int, ActorRef[Event]]
   private var confirmationApprovals = Map.empty[Int, Boolean].withDefaultValue(false)
+  private var currentDeck: Deck = _
 
   def joinGame(name: String, replyTo: ActorRef[Event]): Boolean = {
     log.info("Player '{}' is about to join", name)
@@ -67,6 +69,30 @@ class GameService(gameId: Int)(implicit deckService: DeckService) {
       }
   }
 
+  def toss(positions: List[Int]): List[Int] = {
+    val _positions =
+      positions match {
+        case Nil =>
+          currentDeck = deckService.create()
+          (0 until _state.numOfPlayer).toList
+        case _ => positions
+      }
+    log.info("Performing toss: {}", _positions.mkString(","))
+    val (tossResult, winners) = performToss(state, currentDeck, _positions)
+    playerToActorRefs
+      .foreach {
+        case (_, actorRef) => actorRef ! ResponseEvent(ResponseEnvelope(ResponseType.TossResult, tossResult))
+      }
+    if (winners.length == 1) {
+      // winner is the player who would start the round, we need to find the dealer, who would be the player
+      // right to the winner
+      val dealer = nextPlayer(winners.head, _state.numOfPlayer, PlayDirection.CounterClockwise)
+      _state = _state.updateDealer(dealer).updateStatus(GameStatus.Started)
+      currentDeck = deckService.create()
+    }
+    winners
+  }
+
   def illegalAccess(name: String): Unit =
     _state.player(name) match {
       case Some(player) =>
@@ -80,5 +106,5 @@ class GameService(gameId: Int)(implicit deckService: DeckService) {
 }
 
 object GameService {
-  def apply(gameId: Int)(implicit deckService: DeckService): GameService = new GameService(gameId)
+  def apply(gameId: Int, deckService: DeckService): GameService = new GameService(gameId, deckService)
 }

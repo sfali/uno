@@ -15,13 +15,13 @@ import scala.language.postfixOps
 class GameBehavior private(context: ActorContext[Command],
                            buffer: StashBuffer[Command],
                            timer: TimerScheduler[Command],
-                           gameId: Int)
-                          (implicit deckService: DeckService)
+                           gameId: Int,
+                           deckService: DeckService)
   extends AbstractBehavior[Command](context) {
 
   import GameBehavior._
 
-  private val gameService = GameService(gameId)
+  private val gameService = GameService(gameId, deckService)
 
   context.setReceiveTimeout(1 minute, Idle)
   context.log.info("Starting game: {}", gameId)
@@ -189,7 +189,20 @@ class GameBehavior private(context: ActorContext[Command],
     Behaviors.receiveMessagePartial {
       case NotifyStartGame =>
         gameService.notifyGameStart()
+        timer.startSingleTimer(PerformToss(), 3 seconds)
         Behaviors.same
+
+      case PerformToss(positions) =>
+        gameService.toss(positions) match {
+          case _ :: Nil =>
+            // single winner, we can start round
+            // TODO:
+            gameMode
+          case ls =>
+            // retry for the players with highest cards
+            timer.startSingleTimer(PerformToss(ls), 3 seconds)
+            Behaviors.same
+        }
 
       case GetState(replyTo) =>
         replyTo ! StateInfo(gameService.state)
@@ -222,12 +235,10 @@ class GameBehavior private(context: ActorContext[Command],
 
   private def gameMode: Behavior[Command] =
     Behaviors.receiveMessagePartial[Command] {
-      case JoinGame(_, replyTo) =>
-        // we are already in game mode, no more player is allowed tp be added
-        // This should not happen
-        replyTo ! ErrorEvent(ErrorCode.InvalidStateToJoinGame)
+      case GetState(replyTo) =>
+        replyTo ! StateInfo(gameService.state)
         Behaviors.same
-
+        
       case PlayerLeft(name) =>
         // TODO:
         context.log.warn("Player {} is left the game", name)
@@ -245,6 +256,12 @@ class GameBehavior private(context: ActorContext[Command],
         Behaviors.same
 
       case Shutdown => Behaviors.stopped
+
+      case other: GameCommand =>
+        // TODO: handle JoinGame separately
+        context.log.warn("Invalid command: {} in startGame from: {}", other.getClass.getSimpleName, other.name)
+        gameService.illegalAccess(other.name)
+        Behaviors.same
     }
 
   private def joinGame(name: String,
@@ -275,24 +292,22 @@ object GameBehavior {
 
   val EntityKey: EntityTypeKey[Command] = EntityTypeKey[Command]("UnoGame")
 
-  private def apply(gameId: Int)
-                   (implicit deckService: DeckService): Behavior[Command] = {
+  private def apply(gameId: Int, deckService: DeckService): Behavior[Command] = {
     Behaviors.setup[Command] {
       context =>
         Behaviors.withStash[Command](10) {
           buffer =>
             Behaviors.withTimers[Command] {
-              timer => new GameBehavior(context, buffer, timer, gameId)
+              timer => new GameBehavior(context, buffer, timer, gameId, deckService)
             }
         }
     }
   }
 
-  def init(system: ActorSystem[_])
-          (implicit deckService: DeckService): ActorRef[ShardingEnvelope[Command]] =
+  def init(system: ActorSystem[_], deckService: DeckService): ActorRef[ShardingEnvelope[Command]] =
     ClusterSharding(system)
       .init(Entity(EntityKey)
-      (entityContext => GameBehavior(entityContext.entityId.toInt))
+      (entityContext => GameBehavior(entityContext.entityId.toInt, deckService))
         .withStopMessage(Shutdown))
 
 
@@ -320,6 +335,8 @@ object GameBehavior {
   final case class ConfirmationApproval(name: String, approved: Boolean) extends GameCommand
 
   private final case object NotifyStartGame extends Command
+
+  private final case class PerformToss(positions: List[Int] = Nil) extends Command
 
   final case class PlayerLeft(name: String) extends GameCommand
 

@@ -1,8 +1,9 @@
 package com.alphasystem.game.uno.model.game
 
+import com.alphasystem.game.uno.model.response.TossResult
+import com.alphasystem.game.uno.model.{Card, CardEntry, Color, Deck}
 import com.alphasystem.game.uno.server.service._
-import com.alphasystem.game.uno.model.response.{Cards, TossResult}
-import com.alphasystem.game.uno.model.{Card, CardEntry, Color, Deck, Player}
+import com.alphasystem.game.uno.test._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 
@@ -133,7 +134,7 @@ class GameStateSpec
       Card(Color.Green, CardEntry.Nine) :: Card(Color.Red, CardEntry.Eight) :: Card(Color.Green, CardEntry.Five) :: Nil
     val (tossResult, winners) = performToss(gameState, Deck(initialCards), gameState.players.zipWithIndex.map(_._2).toList)
     winners shouldBe 1 :: Nil
-    tossResult shouldBe TossResult(toCards(initialCards))
+    tossResult shouldBe TossResult(toCards(initialCards, gameState.players))
   }
 
   "Perform toss with a multiple winners" in {
@@ -144,19 +145,10 @@ class GameStateSpec
     val (tossResult, winners) = performToss(gameState, deck, gameState.players.zipWithIndex.map(_._2).toList)
     val expectedWinners = 0 :: 1 :: Nil
     winners shouldBe expectedWinners
-    tossResult shouldBe TossResult(toCards(initialCards.dropRight(2)))
+    tossResult shouldBe TossResult(toCards(initialCards.dropRight(2), gameState.players))
 
     val (tossResult1, winners1) = performToss(gameState, deck, expectedWinners)
     winners1 shouldBe 0 :: Nil
-    tossResult1 shouldBe TossResult(toCards(initialCards.takeRight(2)))
+    tossResult1 shouldBe TossResult(toCards(initialCards.takeRight(2), gameState.players))
   }
-
-  private def createPlayer(id: Int, points: Int = 0) = Player(id, s"Player${id + 1}", points)
-
-  private def toCards(initialCards: List[Card]) =
-    initialCards.zipWithIndex
-      .foldLeft(List[Cards]()) {
-        case (ls, (card, position)) => ls :+ Cards(Some(gameState.player(position).name), card :: Nil)
-      }
-
 }
