@@ -12,6 +12,7 @@ import com.alphasystem.game.uno.model.request.{RequestEnvelope, RequestType}
 import com.alphasystem.game.uno.model.response._
 import com.alphasystem.game.uno.server.Main.Guardian
 import com.alphasystem.game.uno.server.actor.GameBehavior
+import com.alphasystem.game.uno.server.model.{Event, StateInfo}
 import com.alphasystem.game.uno.server.service.FileBasedDeckService
 import com.alphasystem.game.uno.test._
 import io.circe.syntax._

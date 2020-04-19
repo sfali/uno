@@ -1,7 +1,7 @@
-package com.alphasystem.game.uno.model
+package com.alphasystem.game.uno.server.model
 
-import com.alphasystem.game.uno.server.model.game.GameState
 import com.alphasystem.game.uno.model.response.ResponseEnvelope
+import com.alphasystem.game.uno.server.model.game.GameState
 import enumeratum.{CirceEnum, Enum, EnumEntry}
 
 /**

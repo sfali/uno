@@ -7,6 +7,7 @@ import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityType
 import com.alphasystem.game.uno.model._
 import com.alphasystem.game.uno.server.model.game.GameStatus
 import com.alphasystem.game.uno.server.actor.GameBehavior.Command
+import com.alphasystem.game.uno.server.model.{Event, StateInfo}
 import com.alphasystem.game.uno.server.service.{DeckService, GameService}
 
 import scala.concurrent.duration._

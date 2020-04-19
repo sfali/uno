@@ -3,9 +3,10 @@ package com.alphasystem.game.uno.server.service
 import akka.actor.typed.ActorRef
 import com.alphasystem.game.uno.server.model.game.{GameState, GameStatus, PlayDirection}
 import com.alphasystem.game.uno.model.response._
-import com.alphasystem.game.uno.model.{Deck, Event, ResponseEvent}
+import com.alphasystem.game.uno.model.Deck
 import org.slf4j.LoggerFactory
 import com.alphasystem.game.uno._
+import com.alphasystem.game.uno.server.model.{Event, ResponseEvent}
 
 class GameService(gameId: Int, deckService: DeckService) {
 
