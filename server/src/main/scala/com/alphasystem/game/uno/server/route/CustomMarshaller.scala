@@ -1,8 +1,8 @@
-package com.alphasystem.game.uno.routes
+package com.alphasystem.game.uno.server.route
 
 import akka.http.scaladsl.marshalling.Marshaller.fromToEntityMarshaller
 import akka.http.scaladsl.marshalling.{ToEntityMarshaller, ToResponseMarshaller}
-import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model.StatusCodes.{BadRequest, OK}
 import com.alphasystem.game.uno.server.actor.ServerBehavior.{GameAssigned, InvalidAccess}
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport
 

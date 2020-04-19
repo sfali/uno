@@ -5,7 +5,6 @@ import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.util.Timeout
-import com.alphasystem.game.uno.routes.CustomMarshaller
 import com.alphasystem.game.uno.server.actor.ServerBehavior
 import com.alphasystem.game.uno.server.actor.ServerBehavior.{GameAssigned, InternalError, InvalidAccess}
 import io.circe.generic.auto._
