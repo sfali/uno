@@ -1,4 +1,4 @@
-package com.alphasystem.game.uno.routes
+package com.alphasystem.game.uno.server.route
 
 import akka.NotUsed
 import akka.actor.typed.ActorRef
