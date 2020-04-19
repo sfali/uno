@@ -1,4 +1,4 @@
-package com.alphasystem.game.uno.routes
+package com.alphasystem.game.uno.server.route
 
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.cluster.MemberStatus
@@ -7,11 +7,11 @@ import akka.cluster.typed.{Cluster, Join}
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest, WSProbe}
 import com.alphasystem.game.uno.model._
-import com.alphasystem.game.uno.server.model.game.{GameState, GameStatus}
 import com.alphasystem.game.uno.model.request.{RequestEnvelope, RequestType}
 import com.alphasystem.game.uno.model.response._
 import com.alphasystem.game.uno.server.Main.Guardian
 import com.alphasystem.game.uno.server.actor.GameBehavior
+import com.alphasystem.game.uno.server.model.game.{GameState, GameStatus}
 import com.alphasystem.game.uno.server.model.{Event, StateInfo}
 import com.alphasystem.game.uno.server.service.FileBasedDeckService
 import com.alphasystem.game.uno.test._

@@ -10,7 +10,6 @@ import akka.stream.scaladsl.{Flow, GraphDSL, Merge, Sink, Source}
 import akka.stream.typed.scaladsl.{ActorSink, ActorSource}
 import akka.stream.{FlowShape, OverflowStrategy}
 import com.alphasystem.game.uno.model.request.RequestEnvelope
-import com.alphasystem.game.uno.model.Fail
 import com.alphasystem.game.uno.server.actor.GameBehavior
 import com.alphasystem.game.uno.server.model.{Event, Fail, Finished, ResponseEvent}
 import io.circe.parser._

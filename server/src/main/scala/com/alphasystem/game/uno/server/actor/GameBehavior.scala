@@ -1,12 +1,11 @@
 package com.alphasystem.game.uno.server.actor
 
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, StashBuffer, TimerScheduler}
-import akka.actor.typed.{ActorRef, ActorSystem, Behavior, PostStop, Signal}
+import akka.actor.typed._
 import akka.cluster.sharding.typed.ShardingEnvelope
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}
-import com.alphasystem.game.uno.model._
-import com.alphasystem.game.uno.server.model.game.GameStatus
 import com.alphasystem.game.uno.server.actor.GameBehavior.Command
+import com.alphasystem.game.uno.server.model.game.GameStatus
 import com.alphasystem.game.uno.server.model.{Event, StateInfo}
 import com.alphasystem.game.uno.server.service.{DeckService, GameService}
 
@@ -239,7 +238,7 @@ class GameBehavior private(context: ActorContext[Command],
       case GetState(replyTo) =>
         replyTo ! StateInfo(gameService.state)
         Behaviors.same
-        
+
       case PlayerLeft(name) =>
         // TODO:
         context.log.warn("Player {} is left the game", name)
