@@ -46,7 +46,7 @@ class GameSpec
   override protected def beforeAll(): Unit = {
     super.beforeAll()
 
-    testKit.spawn[Nothing](Guardian(deckService), "guardian")
+    testKit.spawn[Nothing](Guardian(deckService, liveMode = false), "guardian")
     val system = testKit.system
     Cluster(system).manager ! Join(Cluster(system).selfMember.address)
     eventually(PatienceConfiguration.Timeout(10.seconds)) {
