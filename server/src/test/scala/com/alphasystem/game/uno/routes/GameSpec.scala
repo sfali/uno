@@ -7,7 +7,7 @@ import akka.cluster.typed.{Cluster, Join}
 import akka.http.scaladsl.model.Uri
 import akka.http.scaladsl.testkit.{RouteTestTimeout, ScalatestRouteTest, WSProbe}
 import com.alphasystem.game.uno.model._
-import com.alphasystem.game.uno.model.game.{GameState, GameStatus}
+import com.alphasystem.game.uno.server.model.game.{GameState, GameStatus}
 import com.alphasystem.game.uno.model.request.{RequestEnvelope, RequestType}
 import com.alphasystem.game.uno.model.response._
 import com.alphasystem.game.uno.server.Main.Guardian

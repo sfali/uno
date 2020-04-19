@@ -5,7 +5,7 @@ import akka.actor.typed.{ActorRef, ActorSystem, Behavior, PostStop, Signal}
 import akka.cluster.sharding.typed.ShardingEnvelope
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}
 import com.alphasystem.game.uno.model._
-import com.alphasystem.game.uno.model.game.GameStatus
+import com.alphasystem.game.uno.server.model.game.GameStatus
 import com.alphasystem.game.uno.server.actor.GameBehavior.Command
 import com.alphasystem.game.uno.server.service.{DeckService, GameService}
 

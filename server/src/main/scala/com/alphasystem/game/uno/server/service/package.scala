@@ -1,6 +1,6 @@
 package com.alphasystem.game.uno.server
 
-import com.alphasystem.game.uno.model.game.GameState
+import com.alphasystem.game.uno.server.model.game.GameState
 import com.alphasystem.game.uno.model.response.{Cards, TossResult}
 import com.alphasystem.game.uno.model.{Card, CardEntry, Deck}
 

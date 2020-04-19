@@ -1,4 +1,4 @@
-package com.alphasystem.game.uno.model.game
+package com.alphasystem.game.uno.server.model.game
 
 import enumeratum.{CirceEnum, Enum, EnumEntry}
 

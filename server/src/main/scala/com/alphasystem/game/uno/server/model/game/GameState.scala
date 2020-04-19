@@ -1,4 +1,4 @@
-package com.alphasystem.game.uno.model.game
+package com.alphasystem.game.uno.server.model.game
 
 import com.alphasystem.game.uno._
 import com.alphasystem.game.uno.model.Player

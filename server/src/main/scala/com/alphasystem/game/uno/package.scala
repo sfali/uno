@@ -1,6 +1,6 @@
 package com.alphasystem.game
 
-import com.alphasystem.game.uno.model.game.PlayDirection
+import com.alphasystem.game.uno.server.model.game.PlayDirection
 
 package object uno {
 

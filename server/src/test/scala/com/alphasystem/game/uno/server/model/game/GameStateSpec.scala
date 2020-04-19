@@ -1,4 +1,4 @@
-package com.alphasystem.game.uno.model.game
+package com.alphasystem.game.uno.server.model.game
 
 import com.alphasystem.game.uno.model.response.TossResult
 import com.alphasystem.game.uno.model.{Card, CardEntry, Color, Deck}

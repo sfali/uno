@@ -1,7 +1,7 @@
 package com.alphasystem.game.uno.server.service
 
 import akka.actor.typed.ActorRef
-import com.alphasystem.game.uno.model.game.{GameState, GameStatus, PlayDirection}
+import com.alphasystem.game.uno.server.model.game.{GameState, GameStatus, PlayDirection}
 import com.alphasystem.game.uno.model.response._
 import com.alphasystem.game.uno.model.{Deck, Event, ResponseEvent}
 import org.slf4j.LoggerFactory
