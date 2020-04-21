@@ -1,57 +1,61 @@
 package com.alphasystem.game.uno.client.ui
 
 import akka.Done
-import akka.actor.typed.scaladsl.adapter._
-import akka.actor.typed.{ActorRef, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketUpgradeResponse}
-import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.typed.scaladsl.ActorSource
-import com.alphasystem.game.uno.model.request.RequestEnvelope
+import akka.stream.{CompletionStrategy, OverflowStrategy}
+import com.alphasystem.game.uno.model.request.{RequestEnvelope, RequestType}
 import com.alphasystem.game.uno.model.response.{ResponseEnvelope, ResponseType}
 import io.circe.parser._
 import io.circe.syntax._
-import javafx.embed.swing.JFXPanel
+import scalafx.application
 import scalafx.application.{JFXApp, Platform}
 import scalafx.geometry.Rectangle2D
 import scalafx.scene.Scene
 import scalafx.scene.control.Alert.AlertType
-import scalafx.scene.control.{Alert, ButtonType}
+import scalafx.scene.control.{Alert, ButtonType, TextInputDialog}
 import scalafx.scene.layout.BorderPane
 import scalafx.stage.Screen
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class Client(gameId: Int, playerName: String)
-            (implicit system: ActorSystem[_])
-  extends JFXApp {
+object Client extends JFXApp {
+
+  private implicit val system: ActorSystem = ActorSystem("client")
+
+  import system.dispatcher
 
   private lazy val log = system.log
 
-  import system.executionContext
+  private var inputSource: ActorRef = _
 
-  private var inputSource: ActorRef[RequestEnvelope] = _
-  private var eventualWebSocketUpgradeResponse: Future[WebSocketUpgradeResponse] = _
+  showInputDialog match {
+    case Some(playerName) =>
+      log.info("Connecting as: {}", playerName)
+      run(1000, playerName)
+    case None =>
+      log.warning("No player name provided, exiting now")
+      system.terminate()
+      System.exit(-2)
+  }
 
-  private lazy val webSocketSource: Source[RequestEnvelope, ActorRef[RequestEnvelope]] =
-    ActorSource
-      .actorRef[RequestEnvelope](
+  private lazy val webSocketSource: Source[Any, ActorRef] =
+    Source
+      .actorRef(
         completionMatcher = {
-          case msg => log.warn("Completed: {}", msg)
+          case RequestEnvelope(RequestType.GameEnd, _) => CompletionStrategy.immediately
         },
-        failureMatcher = {
-          case msg =>
-            log.warn("Failed with message: {}", msg)
-            throw new IllegalArgumentException("?????")
-        },
+        failureMatcher = PartialFunction.empty,
         bufferSize = Int.MaxValue,
         overflowStrategy = OverflowStrategy.fail
       )
 
-  private lazy val webSocketFlow: Flow[Message, ResponseEnvelope, Future[WebSocketUpgradeResponse]] =
-    Http()(system.toClassic)
+  private def webSocketFlow(gameId: Int,
+                            playerName: String): Flow[Message, ResponseEnvelope, Future[WebSocketUpgradeResponse]] =
+    Http()
       .webSocketClientFlow(s"ws://192.168.0.4:8080/uno/gameId/$gameId/playerName/$playerName")
       .collect {
         case TextMessage.Strict(msg) =>
@@ -69,7 +73,8 @@ class Client(gameId: Int, playerName: String)
         requestEnvelope.responseType match {
           case ResponseType.None => ???
           case ResponseType.NewPlayerJoined => ???
-          case ResponseType.GameJoined => ???
+          case ResponseType.GameJoined =>
+            log.info("HERE")
           case ResponseType.StartGameRequested => ???
           case ResponseType.InitiatingToss => ???
           case ResponseType.TossResult => ???
@@ -82,38 +87,36 @@ class Client(gameId: Int, playerName: String)
         }
     }
 
-  def run(): Unit = {
+  private def run(gameId: Int, playerName: String): Unit = {
     val wsConnection =
       webSocketSource
-        .map(command => TextMessage(command.asJson.noSpaces))
-        .viaMat(webSocketFlow)(Keep.both)
+        .map(command => TextMessage(command.asInstanceOf[RequestEnvelope].asJson.noSpaces))
+        .viaMat(webSocketFlow(gameId, playerName))(Keep.both)
         .toMat(webSocketSink)(Keep.both)
         .run()
     inputSource = wsConnection._1._1
-    eventualWebSocketUpgradeResponse = wsConnection._1._2
-  }
-
-  def connect(): Future[Any] = {
+    val eventualWebSocketUpgradeResponse = wsConnection._1._2
     eventualWebSocketUpgradeResponse
       .onComplete {
         case Success(_) =>
           log.info("connected to server.")
-          new JFXPanel() // This will initialize the JavaFx toolkit
           runLater(showUI())
 
         case Failure(ex) =>
           log.error("onComplete.Failure", ex)
       }
-    eventualWebSocketUpgradeResponse.recover {
-      case _ =>
-        log.warn("Unable to connect.")
-        system.terminate()
-        System.exit(-1)
-    }
+    eventualWebSocketUpgradeResponse
+      .recover {
+        case _ =>
+          log.warning("Unable to connect.")
+          system.terminate()
+          System.exit(-1)
+      }
+    ()
   }
 
   private def showUI(): Unit = {
-    stage = new JFXApp.PrimaryStage {
+    stage = new application.JFXApp.PrimaryStage {
       title = "UNO"
 
       private val screen: Screen = Screen.primary
@@ -145,10 +148,14 @@ class Client(gameId: Int, playerName: String)
     }
   }
 
-  private def runLater[R](op: => R): Unit = Platform.runLater(op)
-}
+  private def showInputDialog: Option[String] = {
+    val dialog = new TextInputDialog() {
+      title = "Connect"
+      headerText = "Enter your name to connect to server."
+      contentText = "Please enter your name:"
+    }
+    dialog.showAndWait()
+  }
 
-object Client {
-  def apply(gameId: Int, playerName: String)
-           (implicit system: ActorSystem[_]): Client = new Client(gameId, playerName)(system)
+  private def runLater[R](op: => R): Unit = Platform.runLater(op)
 }
