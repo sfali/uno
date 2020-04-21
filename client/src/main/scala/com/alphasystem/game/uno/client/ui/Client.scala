@@ -33,6 +33,7 @@ class Client(gameId: Int, playerName: String)
   import system.executionContext
 
   private var inputSource: ActorRef[RequestEnvelope] = _
+  private var eventualWebSocketUpgradeResponse: Future[WebSocketUpgradeResponse] = _
 
   private lazy val webSocketSource: Source[RequestEnvelope, ActorRef[RequestEnvelope]] =
     ActorSource
@@ -89,7 +90,10 @@ class Client(gameId: Int, playerName: String)
         .toMat(webSocketSink)(Keep.both)
         .run()
     inputSource = wsConnection._1._1
-    val eventualWebSocketUpgradeResponse: Future[WebSocketUpgradeResponse] = wsConnection._1._2
+    eventualWebSocketUpgradeResponse = wsConnection._1._2
+  }
+
+  def connect(): Future[Any] = {
     eventualWebSocketUpgradeResponse
       .onComplete {
         case Success(_) =>

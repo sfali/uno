@@ -1,7 +1,7 @@
 package com.alphasystem.game.uno.client
 
-import akka.actor.typed.{ActorSystem, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
+import akka.actor.typed.{ActorSystem, Behavior}
 import com.alphasystem.game.uno.client.ui.Client
 
 object Main {
@@ -23,9 +23,10 @@ object Main {
           context.self ! "Start"
 
           Behaviors.receiveMessage[Any] {
-            msg =>
+            _ =>
               val client = Client(gameId, playerName)(context.system)
               client.run()
+              client.connect()
               Behaviors.same
           }
       }.narrow
