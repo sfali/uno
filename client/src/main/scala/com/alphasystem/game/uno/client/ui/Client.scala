@@ -15,7 +15,7 @@ import scalafx.application.{JFXApp, Platform}
 import scalafx.geometry.Rectangle2D
 import scalafx.scene.Scene
 import scalafx.scene.control.Alert.AlertType
-import scalafx.scene.control.{Alert, ButtonType}
+import scalafx.scene.control.{Alert, ButtonType, TextInputDialog}
 import scalafx.scene.layout.BorderPane
 import scalafx.stage.Screen
 
@@ -24,18 +24,23 @@ import scala.util.{Failure, Success}
 
 object Client extends JFXApp {
 
-  private var gameId = 1000
-  private var playerName: String = "Player1"
-
   private implicit val system: ActorSystem = ActorSystem("client")
 
   import system.dispatcher
 
-  run()
-
   private lazy val log = system.log
 
   private var inputSource: ActorRef = _
+
+  showInputDialog match {
+    case Some(playerName) =>
+      log.info("Connecting as: {}", playerName)
+      run(1000, playerName)
+    case None =>
+      log.warning("No player name provided, exiting now")
+      system.terminate()
+      System.exit(-2)
+  }
 
   private lazy val webSocketSource: Source[Any, ActorRef] =
     Source
@@ -48,7 +53,8 @@ object Client extends JFXApp {
         overflowStrategy = OverflowStrategy.fail
       )
 
-  private lazy val webSocketFlow: Flow[Message, ResponseEnvelope, Future[WebSocketUpgradeResponse]] =
+  private def webSocketFlow(gameId: Int,
+                            playerName: String): Flow[Message, ResponseEnvelope, Future[WebSocketUpgradeResponse]] =
     Http()
       .webSocketClientFlow(s"ws://192.168.0.4:8080/uno/gameId/$gameId/playerName/$playerName")
       .collect {
@@ -81,11 +87,11 @@ object Client extends JFXApp {
         }
     }
 
-  private def run(): Unit = {
+  private def run(gameId: Int, playerName: String): Unit = {
     val wsConnection =
       webSocketSource
         .map(command => TextMessage(command.asInstanceOf[RequestEnvelope].asJson.noSpaces))
-        .viaMat(webSocketFlow)(Keep.both)
+        .viaMat(webSocketFlow(gameId, playerName))(Keep.both)
         .toMat(webSocketSink)(Keep.both)
         .run()
     inputSource = wsConnection._1._1
@@ -140,6 +146,15 @@ object Client extends JFXApp {
         }
       }
     }
+  }
+
+  private def showInputDialog: Option[String] = {
+    val dialog = new TextInputDialog() {
+      title = "Connect"
+      headerText = "Enter your name to connect to server."
+      contentText = "Please enter your name:"
+    }
+    dialog.showAndWait()
   }
 
   private def runLater[R](op: => R): Unit = Platform.runLater(op)
