@@ -8,10 +8,8 @@ import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.{CompletionStrategy, OverflowStrategy}
 import com.alphasystem.game.uno.model.request.{RequestEnvelope, RequestType}
 import com.alphasystem.game.uno.model.response.{ResponseEnvelope, ResponseType}
-import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
-import org.slf4j.LoggerFactory
 import scalafx.application
 import scalafx.application.{JFXApp, Platform}
 import scalafx.geometry.Rectangle2D
@@ -24,25 +22,25 @@ import scalafx.stage.Screen
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class Client(gameId: Int, playerName: String)
-            (implicit system: ActorSystem)
-  extends JFXApp {
+object Client extends JFXApp {
 
-  private val log = LoggerFactory.getLogger(classOf[Client])
+  private var gameId = 1000
+  private var playerName: String = "Player1"
+
+  private implicit val system: ActorSystem = ActorSystem("client")
 
   import system.dispatcher
 
-  private var inputSource: ActorRef = _
-  private var eventualWebSocketUpgradeResponse: Future[WebSocketUpgradeResponse] = _
+  run()
 
-  private lazy val webSocketSource: Source[RequestEnvelope, ActorRef] =
+  private lazy val log = system.log
+
+  private var inputSource: ActorRef = _
+
+  private lazy val webSocketSource: Source[Any, ActorRef] =
     Source
-      .actorRef[RequestEnvelope](
+      .actorRef(
         completionMatcher = {
-          /*(re: RequestEnvelope) =>
-            re.requestType match {
-              case RequestType.GameEnd => CompletionStrategy.immediately
-            }*/
           case RequestEnvelope(RequestType.GameEnd, _) => CompletionStrategy.immediately
         },
         failureMatcher = PartialFunction.empty,
@@ -52,7 +50,7 @@ class Client(gameId: Int, playerName: String)
 
   private lazy val webSocketFlow: Flow[Message, ResponseEnvelope, Future[WebSocketUpgradeResponse]] =
     Http()
-      .webSocketClientFlow(s"http://192.168.0.4:8080/uno/gameId/$gameId/playerName/$playerName")
+      .webSocketClientFlow(s"ws://192.168.0.4:8080/uno/gameId/$gameId/playerName/$playerName")
       .collect {
         case TextMessage.Strict(msg) =>
           decode[ResponseEnvelope](msg) match {
@@ -69,7 +67,8 @@ class Client(gameId: Int, playerName: String)
         requestEnvelope.responseType match {
           case ResponseType.None => ???
           case ResponseType.NewPlayerJoined => ???
-          case ResponseType.GameJoined => ???
+          case ResponseType.GameJoined =>
+            log.info("HERE")
           case ResponseType.StartGameRequested => ???
           case ResponseType.InitiatingToss => ???
           case ResponseType.TossResult => ???
@@ -82,37 +81,32 @@ class Client(gameId: Int, playerName: String)
         }
     }
 
-  println(">>>>>>>>>>>>>>>>>>>>>>>>>>")
-
-  // start web socket connection
-  run()
-
-  eventualWebSocketUpgradeResponse
-    .onComplete {
-      case Success(_) =>
-        log.info("connected to server.")
-        runLater(showUI())
-
-      case Failure(ex) =>
-        log.error("onComplete.Failure", ex)
-    }
-  eventualWebSocketUpgradeResponse.recover {
-    case _ =>
-      log.warn("Unable to connect.")
-      system.terminate()
-      System.exit(-1)
-  }
-
   private def run(): Unit = {
-    println(">>>>>>>>>>>>>>>>>>>>>>>>>>")
     val wsConnection =
       webSocketSource
-        .map(command => TextMessage(command.asJson.noSpaces))
+        .map(command => TextMessage(command.asInstanceOf[RequestEnvelope].asJson.noSpaces))
         .viaMat(webSocketFlow)(Keep.both)
         .toMat(webSocketSink)(Keep.both)
         .run()
     inputSource = wsConnection._1._1
-    eventualWebSocketUpgradeResponse = wsConnection._1._2
+    val eventualWebSocketUpgradeResponse = wsConnection._1._2
+    eventualWebSocketUpgradeResponse
+      .onComplete {
+        case Success(_) =>
+          log.info("connected to server.")
+          runLater(showUI())
+
+        case Failure(ex) =>
+          log.error("onComplete.Failure", ex)
+      }
+    eventualWebSocketUpgradeResponse
+      .recover {
+        case _ =>
+          log.warning("Unable to connect.")
+          system.terminate()
+          System.exit(-1)
+      }
+    ()
   }
 
   private def showUI(): Unit = {
@@ -149,9 +143,4 @@ class Client(gameId: Int, playerName: String)
   }
 
   private def runLater[R](op: => R): Unit = Platform.runLater(op)
-}
-
-object Client {
-  def apply(gameId: Int, playerName: String)
-           (implicit system: ActorSystem): Client = new Client(gameId, playerName)(system)
 }
