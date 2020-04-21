@@ -72,8 +72,9 @@ class GameBehavior private(context: ActorContext[Command],
         Behaviors.same
 
       case PlayerLeft(name) =>
-        // TODO:
-        context.log.warn("Player {} is left the game", name)
+        context.log.warn("Player {} is left the game in 'joinGame'", name)
+        // simply remove player from the list
+        gameService.removePlayer(name)
         Behaviors.same
 
       case Fail(name, ex) =>

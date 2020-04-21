@@ -16,6 +16,8 @@ class GameService(gameId: Int, deckService: DeckService) {
   private var confirmationApprovals = Map.empty[Int, Boolean].withDefaultValue(false)
   private var currentDeck: Deck = _
 
+  def removePlayer(name: String): Unit = _state = _state.removePlayer(name)
+
   def joinGame(name: String, replyTo: ActorRef[Event]): Boolean = {
     log.info("Player '{}' is about to join", name)
     val otherPlayers = _state.players.toList

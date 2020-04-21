@@ -19,6 +19,8 @@ case class GameState(id: Int,
 
   def addPlayer(name: String): GameState = copy(players = players :+ Player(numOfPlayer, name))
 
+  def removePlayer(name: String): GameState = copy(players = players.filterNot(_.name == name))
+
   def player(id: Int): Player = players(id)
 
   def player(name: String): Option[Player] = players.find(_.name == name)
