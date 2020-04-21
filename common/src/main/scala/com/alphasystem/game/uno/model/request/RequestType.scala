@@ -16,4 +16,6 @@ object RequestType extends Enum[RequestType] with CirceEnum[RequestType] {
   final case object StartGameApproved extends RequestType
 
   final case object StartGameRejected extends RequestType
+
+  final case object GameEnd extends RequestType
 }

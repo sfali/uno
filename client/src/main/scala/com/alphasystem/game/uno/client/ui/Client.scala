@@ -1,15 +1,14 @@
 package com.alphasystem.game.uno.client.ui
 
 import akka.Done
-import akka.actor.typed.scaladsl.adapter._
-import akka.actor.typed.{ActorRef, ActorSystem}
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketUpgradeResponse}
-import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.typed.scaladsl.ActorSource
-import com.alphasystem.game.uno.model.request.RequestEnvelope
+import akka.stream.{CompletionStrategy, OverflowStrategy}
+import com.alphasystem.game.uno.model.request.{RequestEnvelope, RequestType}
 import com.alphasystem.game.uno.model.response.{ResponseEnvelope, ResponseType}
+import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
 import org.slf4j.LoggerFactory
@@ -17,8 +16,8 @@ import scalafx.application
 import scalafx.application.{JFXApp, Platform}
 import scalafx.geometry.Rectangle2D
 import scalafx.scene.Scene
-import scalafx.scene.control.{Alert, ButtonType}
 import scalafx.scene.control.Alert.AlertType
+import scalafx.scene.control.{Alert, ButtonType}
 import scalafx.scene.layout.BorderPane
 import scalafx.stage.Screen
 
@@ -26,34 +25,33 @@ import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
 class Client(gameId: Int, playerName: String)
-            (implicit system: ActorSystem[_])
+            (implicit system: ActorSystem)
   extends JFXApp {
 
   private val log = LoggerFactory.getLogger(classOf[Client])
 
-  import system.executionContext
+  import system.dispatcher
 
-  private var inputSource: ActorRef[RequestEnvelope] = _
+  private var inputSource: ActorRef = _
   private var eventualWebSocketUpgradeResponse: Future[WebSocketUpgradeResponse] = _
 
-  private lazy val webSocketSource: Source[RequestEnvelope, ActorRef[RequestEnvelope]] =
-    ActorSource
+  private lazy val webSocketSource: Source[RequestEnvelope, ActorRef] =
+    Source
       .actorRef[RequestEnvelope](
         completionMatcher = {
-          case msg => log.warn("Completed: {}", msg)
+          /*(re: RequestEnvelope) =>
+            re.requestType match {
+              case RequestType.GameEnd => CompletionStrategy.immediately
+            }*/
+          case RequestEnvelope(RequestType.GameEnd, _) => CompletionStrategy.immediately
         },
-        failureMatcher = {
-          case msg =>
-            println(s">>>>>>>>>>>>>>> $msg")
-            log.warn("Failed with message: {}", msg)
-            throw new IllegalArgumentException("?????")
-        },
+        failureMatcher = PartialFunction.empty,
         bufferSize = Int.MaxValue,
         overflowStrategy = OverflowStrategy.fail
       )
 
   private lazy val webSocketFlow: Flow[Message, ResponseEnvelope, Future[WebSocketUpgradeResponse]] =
-    Http()(system.toClassic)
+    Http()
       .webSocketClientFlow(s"http://192.168.0.4:8080/uno/gameId/$gameId/playerName/$playerName")
       .collect {
         case TextMessage.Strict(msg) =>
@@ -155,5 +153,5 @@ class Client(gameId: Int, playerName: String)
 
 object Client {
   def apply(gameId: Int, playerName: String)
-           (implicit system: ActorSystem[_]): Client = new Client(gameId, playerName)(system)
+           (implicit system: ActorSystem): Client = new Client(gameId, playerName)(system)
 }
