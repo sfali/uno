@@ -24,8 +24,8 @@ object Main {
 
           Behaviors.receiveMessage[Any] {
             msg =>
-              context.log.info(">>>> {}", msg)
-              Client(gameId, playerName)(context.system)
+              val client = Client(gameId, playerName)(context.system)
+              client.run()
               Behaviors.same
           }
       }.narrow

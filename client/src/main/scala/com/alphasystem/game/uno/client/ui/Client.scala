@@ -12,13 +12,12 @@ import com.alphasystem.game.uno.model.request.RequestEnvelope
 import com.alphasystem.game.uno.model.response.{ResponseEnvelope, ResponseType}
 import io.circe.parser._
 import io.circe.syntax._
-import org.slf4j.LoggerFactory
-import scalafx.application
+import javafx.embed.swing.JFXPanel
 import scalafx.application.{JFXApp, Platform}
 import scalafx.geometry.Rectangle2D
 import scalafx.scene.Scene
-import scalafx.scene.control.{Alert, ButtonType}
 import scalafx.scene.control.Alert.AlertType
+import scalafx.scene.control.{Alert, ButtonType}
 import scalafx.scene.layout.BorderPane
 import scalafx.stage.Screen
 
@@ -29,12 +28,11 @@ class Client(gameId: Int, playerName: String)
             (implicit system: ActorSystem[_])
   extends JFXApp {
 
-  private val log = LoggerFactory.getLogger(classOf[Client])
+  private lazy val log = system.log
 
   import system.executionContext
 
   private var inputSource: ActorRef[RequestEnvelope] = _
-  private var eventualWebSocketUpgradeResponse: Future[WebSocketUpgradeResponse] = _
 
   private lazy val webSocketSource: Source[RequestEnvelope, ActorRef[RequestEnvelope]] =
     ActorSource
@@ -44,7 +42,6 @@ class Client(gameId: Int, playerName: String)
         },
         failureMatcher = {
           case msg =>
-            println(s">>>>>>>>>>>>>>> $msg")
             log.warn("Failed with message: {}", msg)
             throw new IllegalArgumentException("?????")
         },
@@ -54,7 +51,7 @@ class Client(gameId: Int, playerName: String)
 
   private lazy val webSocketFlow: Flow[Message, ResponseEnvelope, Future[WebSocketUpgradeResponse]] =
     Http()(system.toClassic)
-      .webSocketClientFlow(s"http://192.168.0.4:8080/uno/gameId/$gameId/playerName/$playerName")
+      .webSocketClientFlow(s"ws://192.168.0.4:8080/uno/gameId/$gameId/playerName/$playerName")
       .collect {
         case TextMessage.Strict(msg) =>
           decode[ResponseEnvelope](msg) match {
@@ -84,29 +81,7 @@ class Client(gameId: Int, playerName: String)
         }
     }
 
-  println(">>>>>>>>>>>>>>>>>>>>>>>>>>")
-
-  // start web socket connection
-  run()
-
-  eventualWebSocketUpgradeResponse
-    .onComplete {
-      case Success(_) =>
-        log.info("connected to server.")
-        runLater(showUI())
-
-      case Failure(ex) =>
-        log.error("onComplete.Failure", ex)
-    }
-  eventualWebSocketUpgradeResponse.recover {
-    case _ =>
-      log.warn("Unable to connect.")
-      system.terminate()
-      System.exit(-1)
-  }
-
-  private def run(): Unit = {
-    println(">>>>>>>>>>>>>>>>>>>>>>>>>>")
+  def run(): Unit = {
     val wsConnection =
       webSocketSource
         .map(command => TextMessage(command.asJson.noSpaces))
@@ -114,11 +89,27 @@ class Client(gameId: Int, playerName: String)
         .toMat(webSocketSink)(Keep.both)
         .run()
     inputSource = wsConnection._1._1
-    eventualWebSocketUpgradeResponse = wsConnection._1._2
+    val eventualWebSocketUpgradeResponse: Future[WebSocketUpgradeResponse] = wsConnection._1._2
+    eventualWebSocketUpgradeResponse
+      .onComplete {
+        case Success(_) =>
+          log.info("connected to server.")
+          new JFXPanel() // This will initialize the JavaFx toolkit
+          runLater(showUI())
+
+        case Failure(ex) =>
+          log.error("onComplete.Failure", ex)
+      }
+    eventualWebSocketUpgradeResponse.recover {
+      case _ =>
+        log.warn("Unable to connect.")
+        system.terminate()
+        System.exit(-1)
+    }
   }
 
   private def showUI(): Unit = {
-    stage = new application.JFXApp.PrimaryStage {
+    stage = new JFXApp.PrimaryStage {
       title = "UNO"
 
       private val screen: Screen = Screen.primary
