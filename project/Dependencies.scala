@@ -23,13 +23,14 @@ object Dependencies {
   val Common = Seq(
     // These libraries are added to all modules via the `Common` AutoPlugin
     libraryDependencies ++= Seq(
+      ComTypesafeAkka     %% "akka-actor-typed"    % AkkaVersion,
+      ComTypesafeAkka     %% "akka-stream-typed"   % AkkaVersion,
       ComTypesafeAkka     %% "akka-http"           % AkkaHttpVersion,
       IoCirce             %% "circe-core"          % CirceVersion,
       IoCirce             %% "circe-generic"       % CirceVersion,
       IoCirce             %% "circe-parser"        % CirceVersion,
       ComBeachape         %% "enumeratum"          % EnumeratumVersion,
       ComBeachape         %% "enumeratum-circe"    % EnumeratumCirceVersion,
-      DeHeikoseeberger    %% "akka-http-circe"     % AkkaHttpCirceVersion,
       ChQosLogback        %  "logback-classic"     % LogbackVersion,
       ComTypesafeAkka     %% "akka-stream-testkit" % AkkaVersion              % Test,
       ComTypesafeAkka     %% "akka-http-testkit"   % AkkaHttpVersion          % Test,
@@ -40,8 +41,7 @@ object Dependencies {
 
   val Server = Seq(
     libraryDependencies ++= Seq(
-      ComTypesafeAkka     %% "akka-actor-typed"            % AkkaVersion,
-      ComTypesafeAkka     %% "akka-stream-typed"           % AkkaVersion,
+      DeHeikoseeberger    %% "akka-http-circe"             % AkkaHttpCirceVersion,
       ComTypesafeAkka     %% "akka-cluster-sharding-typed" % AkkaVersion,
       ComTypesafeAkka     %% "akka-actor-testkit-typed"    % AkkaVersion      % Test
     )
