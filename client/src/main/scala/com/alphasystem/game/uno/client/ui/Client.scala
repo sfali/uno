@@ -1,8 +1,8 @@
 package com.alphasystem.game.uno.client.ui
 
 import akka.Done
-import akka.actor.typed.scaladsl.adapter._
-import akka.actor.typed.{ActorRef, ActorSystem}
+import akka.actor.ActorSystem
+import akka.actor.typed.ActorRef
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketUpgradeResponse}
 import akka.stream.OverflowStrategy
@@ -17,41 +17,50 @@ import scalafx.application.{JFXApp, Platform}
 import scalafx.geometry.Rectangle2D
 import scalafx.scene.Scene
 import scalafx.scene.control.Alert.AlertType
-import scalafx.scene.control.{Alert, ButtonType}
+import scalafx.scene.control.{Alert, ButtonType, TextInputDialog}
 import scalafx.scene.layout.BorderPane
 import scalafx.stage.Screen
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class Client(gameId: Int, playerName: String)
-            (implicit system: ActorSystem[_])
-  extends JFXApp {
+object Client extends JFXApp {
+
+  private implicit val system: ActorSystem = ActorSystem("client")
 
   private lazy val log = system.log
 
-  import system.executionContext
+  import system.dispatcher
 
   private var inputSource: ActorRef[RequestEnvelope] = _
-  private var eventualWebSocketUpgradeResponse: Future[WebSocketUpgradeResponse] = _
 
-  private lazy val webSocketSource: Source[RequestEnvelope, ActorRef[RequestEnvelope]] =
+  showInputDialog match {
+    case Some(playerName) =>
+      log.info("Connecting as: {}", playerName)
+      run(1000, playerName)
+    case None =>
+      log.warning("No player name provided, exiting now")
+      system.terminate()
+      System.exit(-2)
+  }
+
+  private def webSocketSource: Source[RequestEnvelope, ActorRef[RequestEnvelope]] =
     ActorSource
       .actorRef[RequestEnvelope](
         completionMatcher = {
-          case msg => log.warn("Completed: {}", msg)
+          case msg => log.warning("Completed: {}", msg)
         },
         failureMatcher = {
           case msg =>
-            log.warn("Failed with message: {}", msg)
+            log.warning("Failed with message: {}", msg)
             throw new IllegalArgumentException("?????")
         },
         bufferSize = Int.MaxValue,
         overflowStrategy = OverflowStrategy.fail
       )
 
-  private lazy val webSocketFlow: Flow[Message, ResponseEnvelope, Future[WebSocketUpgradeResponse]] =
-    Http()(system.toClassic)
+  private def webSocketFlow(gameId: Int, playerName: String): Flow[Message, ResponseEnvelope, Future[WebSocketUpgradeResponse]] =
+    Http()
       .webSocketClientFlow(s"ws://192.168.0.4:8080/uno/gameId/$gameId/playerName/$playerName")
       .collect {
         case TextMessage.Strict(msg) =>
@@ -63,7 +72,7 @@ class Client(gameId: Int, playerName: String)
           }
       }
 
-  private lazy val webSocketSink: Sink[ResponseEnvelope, Future[Done]] =
+  private def webSocketSink: Sink[ResponseEnvelope, Future[Done]] =
     Sink.foreach[ResponseEnvelope] {
       requestEnvelope =>
         requestEnvelope.responseType match {
@@ -81,19 +90,15 @@ class Client(gameId: Int, playerName: String)
           case ResponseType.ChatMessage => ???
         }
     }
-
-  def run(): Unit = {
+  private def run(gameId: Int, playerName: String): Unit = {
     val wsConnection =
       webSocketSource
         .map(command => TextMessage(command.asJson.noSpaces))
-        .viaMat(webSocketFlow)(Keep.both)
+        .viaMat(webSocketFlow(gameId, playerName))(Keep.both)
         .toMat(webSocketSink)(Keep.both)
         .run()
     inputSource = wsConnection._1._1
-    eventualWebSocketUpgradeResponse = wsConnection._1._2
-  }
-
-  def connect(): Future[Any] = {
+    val eventualWebSocketUpgradeResponse = wsConnection._1._2
     eventualWebSocketUpgradeResponse
       .onComplete {
         case Success(_) =>
@@ -106,7 +111,7 @@ class Client(gameId: Int, playerName: String)
       }
     eventualWebSocketUpgradeResponse.recover {
       case _ =>
-        log.warn("Unable to connect.")
+        log.warning("Unable to connect.")
         system.terminate()
         System.exit(-1)
     }
@@ -145,10 +150,14 @@ class Client(gameId: Int, playerName: String)
     }
   }
 
-  private def runLater[R](op: => R): Unit = Platform.runLater(op)
-}
+  private def showInputDialog: Option[String] = {
+    val dialog = new TextInputDialog() {
+      title = "Connect"
+      headerText = "Enter your name to connect to server."
+      contentText = "Please enter your name:"
+    }
+    dialog.showAndWait()
+  }
 
-object Client {
-  def apply(gameId: Int, playerName: String)
-           (implicit system: ActorSystem[_]): Client = new Client(gameId, playerName)(system)
+  private def runLater[R](op: => R): Unit = Platform.runLater(op)
 }
