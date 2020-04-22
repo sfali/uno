@@ -8,10 +8,13 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketUpgradeRespon
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.typed.scaladsl.ActorSource
+import com.alphasystem.game.uno.client.ui.control.GameView
+import com.alphasystem.game.uno.model.Player
 import com.alphasystem.game.uno.model.request.RequestEnvelope
-import com.alphasystem.game.uno.model.response.{ResponseEnvelope, ResponseType}
+import com.alphasystem.game.uno.model.response.{PlayerJoined, ResponseEnvelope, ResponseType}
 import io.circe.parser._
 import io.circe.syntax._
+import io.circe.generic.auto._
 import scalafx.application.{JFXApp, Platform}
 import scalafx.geometry.Rectangle2D
 import scalafx.scene.Scene
@@ -27,9 +30,13 @@ object Client extends JFXApp {
 
   private implicit val system: ActorSystem = ActorSystem("client")
 
+  import system.dispatcher
+
   private lazy val log = system.log
 
-  import system.dispatcher
+  private lazy val gameView = GameView()
+
+  private lazy val controller = UIController(gameView)
 
   private var inputSource: ActorRef[RequestEnvelope] = _
 
@@ -66,18 +73,19 @@ object Client extends JFXApp {
           decode[ResponseEnvelope](msg) match {
             case Left(error) => throw error
             case Right(responseEnvelope) =>
-              log.info("Request received: {}", responseEnvelope.responseType)
+              log.info("Request received: {}", responseEnvelope.`type`)
               responseEnvelope
           }
       }
 
   private def webSocketSink: Sink[ResponseEnvelope, Future[Done]] =
     Sink.foreach[ResponseEnvelope] {
-      requestEnvelope =>
-        requestEnvelope.responseType match {
-          case ResponseType.None => ???
+      responseEnvelope =>
+        responseEnvelope.`type` match {
+          case ResponseType.GameJoined =>
+            val response = responseEnvelope.payload.asInstanceOf[PlayerJoined]
+            runLater(controller.handleGameJoin(response.player, response.otherPlayers))
           case ResponseType.NewPlayerJoined => ???
-          case ResponseType.GameJoined => ???
           case ResponseType.StartGameRequested => ???
           case ResponseType.InitiatingToss => ???
           case ResponseType.TossResult => ???
@@ -131,6 +139,7 @@ object Client extends JFXApp {
 
       scene = new Scene {
         private val pane = new BorderPane()
+        pane.setCenter(gameView)
         root = pane
 
         onCloseRequest = evt => {
@@ -156,6 +165,11 @@ object Client extends JFXApp {
       contentText = "Please enter your name:"
     }
     dialog.showAndWait()
+  }
+
+  private def handleGameJoin(player: Player, otherPlayers: List[Player]): Unit = {
+    val allPlayers = otherPlayers.map(_.toPlayerDetail) :+ player.toPlayerDetail.copy(name = "You")
+    allPlayers.foreach(player => gameView.addPlayer(player))
   }
 
   private def runLater[R](op: => R): Unit = Platform.runLater(op)
