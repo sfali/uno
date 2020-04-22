@@ -15,6 +15,7 @@ import com.alphasystem.game.uno.server.model.game.{GameState, GameStatus}
 import com.alphasystem.game.uno.server.model.{Event, StateInfo}
 import com.alphasystem.game.uno.server.service.FileBasedDeckService
 import com.alphasystem.game.uno.test._
+import io.circe.generic.auto._
 import io.circe.syntax._
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.concurrent.{Eventually, PatienceConfiguration, ScalaFutures}

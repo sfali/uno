@@ -12,6 +12,7 @@ import akka.stream.{FlowShape, OverflowStrategy}
 import com.alphasystem.game.uno.model.request.RequestEnvelope
 import com.alphasystem.game.uno.server.actor.GameBehavior
 import com.alphasystem.game.uno.server.model.{Event, Fail, Finished, ResponseEvent}
+import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
 import org.slf4j.LoggerFactory
