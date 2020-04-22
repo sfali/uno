@@ -39,7 +39,7 @@ class GameSpec
 
   private val testKit = ActorTestKit("uno")
   private val probe = testKit.createTestProbe[Event]()
-  private val players = (0 to 4).map(pos => createPlayer(pos)).toArray
+  private val players = (0 to 4).map(pos => Player(createPlayer(pos))).toArray
   private lazy val gameActorRef = GameBehavior.init(testKit.system, deckService)
   private lazy val gameRoute = GameRoute(gameActorRef)
 
@@ -104,7 +104,7 @@ class GameSpec
     val gameId = 1000
     val gameState = getGameState(gameId)
     gameState.id shouldBe gameId
-    gameState.players.toList shouldBe players.toList
+    gameState.players.toList.map(Player(_)) shouldBe players.toList
     gameState.status shouldBe GameStatus.Initiated
   }
 

@@ -3,7 +3,7 @@ package com.alphasystem.game.uno.server.service
 import akka.actor.typed.ActorRef
 import com.alphasystem.game.uno.server.model.game.{GameState, GameStatus, PlayDirection}
 import com.alphasystem.game.uno.model.response._
-import com.alphasystem.game.uno.model.Deck
+import com.alphasystem.game.uno.model.{Deck, Player}
 import org.slf4j.LoggerFactory
 import com.alphasystem.game.uno._
 import com.alphasystem.game.uno.server.model.{Event, ResponseEvent}
@@ -20,20 +20,21 @@ class GameService(gameId: Int, deckService: DeckService) {
 
   def joinGame(name: String, replyTo: ActorRef[Event]): Boolean = {
     log.info("Player '{}' is about to join", name)
-    val otherPlayers = _state.players.toList
+    val otherPlayers = _state.players.toList.map(Player(_))
     _state = _state.addPlayer(name)
-    val player = _state.player(_state.numOfPlayer - 1)
-    playerToActorRefs += player.position -> replyTo
+    val playerDetail = _state.player(_state.numOfPlayer - 1)
+    playerToActorRefs += playerDetail.position -> replyTo
     playerToActorRefs
       .foreach {
         case (position, actorRef) =>
           val event =
-            if (position == player.position)
-              ResponseEvent(ResponseEnvelope(ResponseType.GameJoined, PlayerJoined(player, otherPlayers)))
+            if (position == playerDetail.position)
+              ResponseEvent(ResponseEnvelope(ResponseType.GameJoined, PlayerJoined(Player(playerDetail), otherPlayers)))
             else
-              ResponseEvent(ResponseEnvelope(ResponseType.NewPlayerJoined, PlayerJoined(player)))
+              ResponseEvent(ResponseEnvelope(ResponseType.NewPlayerJoined, PlayerJoined(Player(playerDetail))))
           actorRef ! event
       }
+    log.info("Player '{}' is joined", name)
     _state.reachedCapacity
   }
 
