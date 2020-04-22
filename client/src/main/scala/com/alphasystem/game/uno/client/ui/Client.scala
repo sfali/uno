@@ -12,7 +12,6 @@ import com.alphasystem.game.uno.model.request.RequestEnvelope
 import com.alphasystem.game.uno.model.response.{ResponseEnvelope, ResponseType}
 import io.circe.parser._
 import io.circe.syntax._
-import javafx.embed.swing.JFXPanel
 import scalafx.application.{JFXApp, Platform}
 import scalafx.geometry.Rectangle2D
 import scalafx.scene.Scene
@@ -90,6 +89,7 @@ object Client extends JFXApp {
           case ResponseType.ChatMessage => ???
         }
     }
+
   private def run(gameId: Int, playerName: String): Unit = {
     val wsConnection =
       webSocketSource
@@ -103,7 +103,6 @@ object Client extends JFXApp {
       .onComplete {
         case Success(_) =>
           log.info("connected to server.")
-          new JFXPanel() // This will initialize the JavaFx toolkit
           runLater(showUI())
 
         case Failure(ex) =>
