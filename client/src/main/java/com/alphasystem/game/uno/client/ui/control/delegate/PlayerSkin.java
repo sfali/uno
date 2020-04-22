@@ -27,10 +27,10 @@ class PlayerSkin extends SkinBase<PlayerView> {
             else value = String.valueOf(cardsLeft);
             cardsLeftLabel.setText(value);
         });
-        getChildren().addAll(initPane());
+        getChildren().addAll(setup());
     }
 
-    private TitledPane initPane() {
+    private TitledPane setup() {
         final TitledPane titledPane = new TitledPane();
         titledPane.setCollapsible(false);
         titledPane.setFont(Util.FONT_TITLE_INACTIVE);

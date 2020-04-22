@@ -58,7 +58,6 @@ public class ViewTest extends Application {
                 createColumnConstraints());
 
         final BorderPane borderPane = new BorderPane();
-        borderPane.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
         borderPane.setTop(gridPane);
 
         Scene scene = new Scene(borderPane);
