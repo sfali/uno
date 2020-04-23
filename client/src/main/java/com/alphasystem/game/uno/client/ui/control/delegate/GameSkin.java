@@ -10,12 +10,12 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 
-class GameSkin extends SkinBase<GameView> {
+class GameSkin extends SkinBase<PlayersView> {
 
     private final GridPane playerViewerPane = new GridPane();
     private final PlayerView[] playerViews = new PlayerView[9];
 
-    protected GameSkin(GameView control) {
+    protected GameSkin(PlayersView control) {
         super(control);
 
         playerViewerPane.setPadding(new Insets(5, 5, 5, 5));

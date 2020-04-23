@@ -1,6 +1,6 @@
 package com.alphasystem.game.uno.client.ui.control
 
-import com.alphasystem.game.uno.client.ui.control.delegate.{GameView => JGameView}
+import com.alphasystem.game.uno.client.ui.control.delegate.{PlayersView => JPlayersView}
 import com.alphasystem.game.uno.model.PlayerDetail
 import javafx.collections.ObservableList
 import scalafx.Includes._
@@ -9,7 +9,7 @@ import scalafx.scene.Node
 
 import scala.jdk.CollectionConverters._
 
-class GameView private(override val delegate: JGameView) extends Node(delegate) {
+class GameView private(override val delegate: JPlayersView) extends Node(delegate) {
 
   def playerDetails: ObservableList[PlayerDetail] = delegate.getPlayerDetails
 
@@ -23,5 +23,5 @@ class GameView private(override val delegate: JGameView) extends Node(delegate) 
 }
 
 object GameView {
-  def apply(): GameView = new GameView(new JGameView())
+  def apply(): GameView = new GameView(new JPlayersView())
 }

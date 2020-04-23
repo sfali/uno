@@ -11,12 +11,12 @@ import javafx.scene.control.Skin;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class GameView extends Control {
+public final class PlayersView extends Control {
 
     private final ObservableList<PlayerDetail> playerDetails = FXCollections.observableArrayList(new ArrayList<>());
     private final IntegerProperty selectedPosition = new SimpleIntegerProperty(this, "selectedPosition", -1);
 
-    public GameView() {
+    public PlayersView() {
         setSkin(createDefaultSkin());
         setPlayerDetails(new ArrayList<>());
     }
