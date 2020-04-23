@@ -16,6 +16,10 @@ public final class CardView extends Control {
         this(null, null, 128);
     }
 
+    public CardView(Card card) {
+        this(card, null, 128);
+    }
+
     public CardView(Card card, String playerName, int height) {
         setSkin(createDefaultSkin());
         setCard(card);

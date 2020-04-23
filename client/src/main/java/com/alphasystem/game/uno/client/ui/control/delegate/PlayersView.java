@@ -8,17 +8,15 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Control;
 import javafx.scene.control.Skin;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public final class PlayersView extends Control {
 
-    private final ObservableList<PlayerDetail> playerDetails = FXCollections.observableArrayList(new ArrayList<>());
+    private final ObservableList<PlayerDetail> playerDetails = FXCollections.observableArrayList();
     private final IntegerProperty selectedPosition = new SimpleIntegerProperty(this, "selectedPosition", -1);
 
     public PlayersView() {
         setSkin(createDefaultSkin());
-        setPlayerDetails(new ArrayList<>());
     }
 
     @Override
