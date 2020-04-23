@@ -11,6 +11,8 @@ class UIController(playersView: PlayersView) {
     val allPlayers = otherPlayers.map(_.toPlayerDetail) :+ myPlayer
     playersView.playerDetails = allPlayers
   }
+
+  def handlePlayerJoin(player: Player): Unit = playersView.addPlayer(player.toPlayerDetail)
 }
 
 object UIController {
