@@ -5,7 +5,7 @@ import com.alphasystem.game.uno.model.{Card, PlayerDetail}
 
 package object test {
 
-  def createPlayer(id: Int, points: Int = 0): PlayerDetail = PlayerDetail(id, s"Player${id + 1}", points = points)
+  def createPlayer(id: Int, points: Int = 0): PlayerDetail = PlayerDetail(s"Player${id + 1}", points = points)
 
   def toCards(cards: List[Card], players: Array[PlayerDetail]): List[Cards] =
     cards

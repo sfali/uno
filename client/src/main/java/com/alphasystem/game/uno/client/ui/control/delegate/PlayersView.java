@@ -34,7 +34,7 @@ public final class PlayersView extends Control {
     }
 
     public void addPlayer(PlayerDetail playerDetail) {
-        playerDetails.add(playerDetail.position(), playerDetail);
+        playerDetails.add(playerDetail);
     }
 
     public PlayerDetail getMyPlayer() {

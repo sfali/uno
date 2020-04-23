@@ -62,14 +62,14 @@ class GameSpec
 
   "Connect to websocket" in {
     val probe = WSProbe()
-    WS(uri(Player(0, "Player1"), 1), probe.flow) ~> gameRoute ~> check {
+    WS(uri(Player("Player1"), 1), probe.flow) ~> gameRoute ~> check {
       isWebSocketUpgrade shouldEqual true
     }
   }
 
   "Add players" in {
     val wsClients = Array(WSProbe(), WSProbe(), WSProbe(), WSProbe(), WSProbe())
-    players.map(_.position).foreach(validateJoinGame(1000, players, wsClients))
+    players.zipWithIndex.map(_._2).foreach(validateJoinGame(1000, players, wsClients))
   }
 
   "Start game" in {
@@ -189,7 +189,7 @@ class GameSpec
     WS(uri(player, gameId), client.flow) ~> gameRoute ~> check {
       val otherPLayers = playersAlreadyJoined(position, players)
       validateGameJoined(client, player, otherPLayers)
-      otherPLayers.map(_.position)
+      otherPLayers.zipWithIndex.map(_._2)
         .foreach {
           pos => validatePlayerJoined(wsClients(pos), player)
         }

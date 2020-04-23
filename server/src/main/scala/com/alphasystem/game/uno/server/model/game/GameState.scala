@@ -17,15 +17,13 @@ case class GameState(id: Int,
 
   def hasMinimumCapacity: Boolean = numOfPlayer >= MinNumberOfPlayers
 
-  def addPlayer(name: String): GameState = copy(players = players :+ PlayerDetail(numOfPlayer, name))
+  def addPlayer(name: String): GameState = copy(players = players :+ PlayerDetail(name))
 
   def removePlayer(name: String): GameState = copy(players = players.filterNot(_.name == name))
 
   def player(id: Int): PlayerDetail = players(id)
 
   def player(name: String): Option[PlayerDetail] = players.find(_.name == name)
-
-  def position(name: String): Option[Int] = player(name).map(_.position)
 
   def currentPlayer: PlayerDetail = players(currentPlayerId)
 
