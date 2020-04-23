@@ -61,7 +61,11 @@ class PlayersSkin extends SkinBase<PlayersView> {
 
     private PlayerView createPlayerView(PlayerDetail playerDetail) {
         final PlayerView playerView = new PlayerView();
-        playerView.setName(playerDetail.name());
+        String playerName = playerDetail.name();
+        if (playerName.equals(getSkinnable().getMyPlayer().name())) {
+            playerName = "You";
+        }
+        playerView.setName(playerName);
         return playerView;
     }
 

@@ -6,7 +6,9 @@ import com.alphasystem.game.uno.model.Player
 class UIController(playersView: PlayersView) {
 
   def handleGameJoin(player: Player, otherPlayers: List[Player]): Unit = {
-    val allPlayers = otherPlayers.map(_.toPlayerDetail) :+ player.toPlayerDetail.copy(name = "You")
+    val myPlayer = player.toPlayerDetail
+    playersView.myPlayer = myPlayer
+    val allPlayers = otherPlayers.map(_.toPlayerDetail) :+ myPlayer
     playersView.playerDetails = allPlayers
   }
 }
