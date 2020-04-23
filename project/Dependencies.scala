@@ -50,7 +50,7 @@ object Dependencies {
   val Client = Seq (
     libraryDependencies ++= Seq(
       "org.scalafx"      %% "scalafx"     % "12.0.2-R18",
-      "org.controlsfx"   %  "controlsfx"  % "11.0.1"
+      "org.controlsfx"   %  "controlsfx"  % "8.40.16"
     )
   )
 }
