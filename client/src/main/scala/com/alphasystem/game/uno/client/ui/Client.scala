@@ -8,7 +8,7 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketUpgradeRespon
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.typed.scaladsl.ActorSource
-import com.alphasystem.game.uno.client.ui.control.GameView
+import com.alphasystem.game.uno.client.ui.control.PlayersView
 import com.alphasystem.game.uno.model.Player
 import com.alphasystem.game.uno.model.request.RequestEnvelope
 import com.alphasystem.game.uno.model.response.{PlayerJoined, ResponseEnvelope, ResponseType}
@@ -34,9 +34,9 @@ object Client extends JFXApp {
 
   private lazy val log = system.log
 
-  private lazy val gameView = GameView()
+  private lazy val playersView = PlayersView()
 
-  private lazy val controller = UIController(gameView)
+  private lazy val controller = UIController(playersView)
 
   private var inputSource: ActorRef[RequestEnvelope] = _
 
@@ -139,7 +139,7 @@ object Client extends JFXApp {
 
       scene = new Scene {
         private val pane = new BorderPane()
-        pane.setCenter(gameView)
+        pane.setCenter(playersView)
         root = pane
 
         onCloseRequest = evt => {
@@ -169,7 +169,7 @@ object Client extends JFXApp {
 
   private def handleGameJoin(player: Player, otherPlayers: List[Player]): Unit = {
     val allPlayers = otherPlayers.map(_.toPlayerDetail) :+ player.toPlayerDetail.copy(name = "You")
-    allPlayers.foreach(player => gameView.addPlayer(player))
+    allPlayers.foreach(player => playersView.addPlayer(player))
   }
 
   private def runLater[R](op: => R): Unit = Platform.runLater(op)

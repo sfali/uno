@@ -9,7 +9,7 @@ import scalafx.scene.Node
 
 import scala.jdk.CollectionConverters._
 
-class GameView private(override val delegate: JPlayersView) extends Node(delegate) {
+class PlayersView private(override val delegate: JPlayersView) extends Node(delegate) {
 
   def playerDetails: ObservableList[PlayerDetail] = delegate.getPlayerDetails
 
@@ -22,6 +22,6 @@ class GameView private(override val delegate: JPlayersView) extends Node(delegat
   def selectedPosition_=(position: Int): Unit = delegate.setSelectedPosition(position)
 }
 
-object GameView {
-  def apply(): GameView = new GameView(new JPlayersView())
+object PlayersView {
+  def apply(): PlayersView = new PlayersView(new JPlayersView())
 }

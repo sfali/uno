@@ -23,7 +23,7 @@ public final class PlayersView extends Control {
 
     @Override
     protected Skin<?> createDefaultSkin() {
-        return new GameSkin(this);
+        return new PlayersSkin(this);
     }
 
     public ObservableList<PlayerDetail> getPlayerDetails() {
