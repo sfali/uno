@@ -1,9 +1,7 @@
 package com.alphasystem.game.uno.client.ui.control.delegate;
 
 import com.alphasystem.game.uno.model.PlayerDetail;
-import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -16,7 +14,7 @@ public final class PlayersView extends Control {
 
     private final ObservableList<PlayerDetail> playerDetails = FXCollections.observableArrayList();
     private final ObjectProperty<PlayerDetail> myPlayer = new SimpleObjectProperty<>(this, "myPlayer", null);
-    private final IntegerProperty selectedPosition = new SimpleIntegerProperty(this, "selectedPosition", -1);
+    private final ObjectProperty<PlayerDetail> selectedPlayer = new SimpleObjectProperty<>(this, "selectedPlayer", null);
 
     public PlayersView() {
         setSkin(createDefaultSkin());
@@ -51,15 +49,15 @@ public final class PlayersView extends Control {
         this.myPlayer.set(myPlayer);
     }
 
-    public int getSelectedPosition() {
-        return selectedPosition.get();
+    public PlayerDetail getSelectedPlayer() {
+        return selectedPlayer.get();
     }
 
-    public IntegerProperty selectedPositionProperty() {
-        return selectedPosition;
+    public ObjectProperty<PlayerDetail> selectedPlayerProperty() {
+        return selectedPlayer;
     }
 
-    public void setSelectedPosition(int selectedPosition) {
-        this.selectedPosition.set(selectedPosition);
+    public void setSelectedPlayer(PlayerDetail selectedPlayer) {
+        this.selectedPlayer.set(selectedPlayer);
     }
 }

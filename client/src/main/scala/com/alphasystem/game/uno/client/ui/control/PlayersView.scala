@@ -21,9 +21,9 @@ class PlayersView private(override val delegate: JPlayersView) extends Node(dele
 
   def myPlayer_=(playerDetail: PlayerDetail): Unit = delegate.setMyPlayer(playerDetail)
 
-  def selectedPosition: IntegerProperty = delegate.selectedPositionProperty()
+  def selectedPlayer: ObjectProperty[PlayerDetail] = delegate.selectedPlayerProperty()
 
-  def selectedPosition_=(position: Int): Unit = delegate.setSelectedPosition(position)
+  def selectedPlayer_=(playerDetail: PlayerDetail): Unit = delegate.setSelectedPlayer(playerDetail)
 }
 
 object PlayersView {

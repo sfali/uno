@@ -144,6 +144,7 @@ object Client extends JFXApp {
         pane.setCenter(playersView)
         pane.setBottom(Borders.wrap(cardsView).etchedBorder().build().build())
         root = pane
+        maximized = true
 
         onCloseRequest = evt => {
           val result =
