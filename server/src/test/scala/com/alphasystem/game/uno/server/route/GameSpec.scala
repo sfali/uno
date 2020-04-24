@@ -127,13 +127,13 @@ class GameSpec
 
   private def validateStartGame(clients: Array[WSProbe]): Unit = {
     val client = clients(0)
-    val text = RequestEnvelope(RequestType.StartGame, request.Empty()).asJson.noSpaces
+    val text = RequestEnvelope(RequestType.StartGame, request.GameMode(GameType.Classic)).asJson.noSpaces
     client.sendMessage(text)
     client.expectNoMessage()
     (1 until clients.length)
       .foreach {
         pos =>
-          val response = ResponseEnvelope(ResponseType.StartGameRequested, Empty())
+          val response = ResponseEnvelope(ResponseType.StartGameRequested, GameMode(GameType.Classic))
           clients(pos).expectMessage(response.asJson.noSpaces)
       }
   }

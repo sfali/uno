@@ -1,12 +1,14 @@
 package com.alphasystem.game.uno.model.response
 
-import com.alphasystem.game.uno.model.{Card, Player}
+import com.alphasystem.game.uno.model.{Card, GameType, Player}
 
 sealed trait ResponsePayload
 
 final case class Empty() extends ResponsePayload
 
 final case class PlayerInfo(player: Player, otherPlayers: List[Player] = Nil) extends ResponsePayload
+
+final case class GameMode(`type`: GameType) extends ResponsePayload
 
 final case class Message(playerName: Option[String] = None,
                          code: MessageCode,

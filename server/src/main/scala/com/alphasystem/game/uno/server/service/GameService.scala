@@ -3,7 +3,7 @@ package com.alphasystem.game.uno.server.service
 import akka.actor.typed.ActorRef
 import com.alphasystem.game.uno._
 import com.alphasystem.game.uno.model.response._
-import com.alphasystem.game.uno.model.{Deck, Player}
+import com.alphasystem.game.uno.model.{Deck, GameType, Player}
 import com.alphasystem.game.uno.server.model.game.{GameState, GameStatus, PlayDirection}
 import com.alphasystem.game.uno.server.model.{Event, ResponseEvent}
 import org.slf4j.LoggerFactory
@@ -12,6 +12,7 @@ class GameService(gameId: Int, deckService: DeckService) {
 
   private val log = LoggerFactory.getLogger(classOf[GameService])
   private var _state = GameState(gameId)
+  private var gameMode: GameType = GameType.Classic
   private var playerToActorRefs = Map.empty[String, ActorRef[Event]]
   private var confirmationApprovals = Map.empty[String, Boolean].withDefaultValue(false)
   private var currentDeck: Deck = deckService.create()
@@ -50,15 +51,16 @@ class GameService(gameId: Int, deckService: DeckService) {
     _state.reachedCapacity
   }
 
-  def startGame(name: String): Unit = {
+  def startGame(name: String, mode: GameType): Unit = {
     log.info("Get request to start game from {}", name)
+    this.gameMode = mode
     val validPlayer = _state.players.exists(_.name == name)
     // for invalid, we do not need to send back any response
     if (validPlayer) {
       _state.players.filterNot(_.name == name).map(_.name)
         .foreach {
           name =>
-            playerToActorRefs(name) ! ResponseEvent(ResponseEnvelope(ResponseType.StartGameRequested, Empty()))
+            playerToActorRefs(name) ! ResponseEvent(ResponseEnvelope(ResponseType.StartGameRequested, GameMode(mode)))
         }
     }
   }
@@ -68,7 +70,7 @@ class GameService(gameId: Int, deckService: DeckService) {
       case Some(playerDetail) =>
         val s = if (approved) "approved " else "rejected"
         log.info("Start game request is {} by {}", s, name)
-        confirmationApprovals += (name -> approved)
+        confirmationApprovals += (playerDetail.name -> approved)
         val acceptedCount = confirmationApprovals.count(_._2 == true).toDouble
         val approvalPercentage = (acceptedCount / playerToActorRefs.size) * 100
         approvalPercentage >= 50.0

@@ -4,6 +4,7 @@ import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, Sta
 import akka.actor.typed._
 import akka.cluster.sharding.typed.ShardingEnvelope
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}
+import com.alphasystem.game.uno.model.GameType
 import com.alphasystem.game.uno.server.actor.GameBehavior.Command
 import com.alphasystem.game.uno.server.model.game.GameStatus
 import com.alphasystem.game.uno.server.model.{Event, StateInfo}
@@ -63,8 +64,8 @@ class GameBehavior private(context: ActorContext[Command],
     Behaviors.receiveMessagePartial {
       case JoinGame(name, replyTo) => joinGame(name, replyTo)
 
-      case StartGame(name) =>
-        context.self ! StartGame(name)
+      case StartGame(name, mode) =>
+        context.self ! StartGame(name, mode)
         startGame
 
       case GetState(replyTo) =>
@@ -102,7 +103,7 @@ class GameBehavior private(context: ActorContext[Command],
         // we will still let the people get into the game
         joinGame(name, replyTo, startTriggered = true)
 
-      case StartGame(name) =>
+      case StartGame(name, mode) =>
         // There is a indication to start game.
         // If we reached max capacity, then start the game
         // Otherwise ask other players for their consent
@@ -110,7 +111,7 @@ class GameBehavior private(context: ActorContext[Command],
           // TODO: start with toss to find who would start the game
           Behaviors.same
         } else {
-          gameService.startGame(name)
+          gameService.startGame(name, mode)
           timer.startSingleTimer(WaitForConfirmations.getClass.getSimpleName, WaitForConfirmations, 30 seconds)
           startGameApprovals
         }
@@ -276,7 +277,7 @@ class GameBehavior private(context: ActorContext[Command],
     } else {
       val reachedCapacity = gameService.joinGame(name, replyTo)
       if (reachedCapacity && !startTriggered) {
-        context.self ! StartGame(state.players.head.name)
+        context.self ! StartGame(state.players.head.name, GameType.Classic) // TODO:
         startGame
       } else Behaviors.same[Command]
     }
@@ -329,7 +330,7 @@ object GameBehavior {
 
   final case class JoinGame(name: String, replyTo: ActorRef[Event]) extends GameCommand
 
-  final case class StartGame(name: String) extends GameCommand
+  final case class StartGame(name: String, mode: GameType) extends GameCommand
 
   final case object WaitForConfirmations extends Command
 
