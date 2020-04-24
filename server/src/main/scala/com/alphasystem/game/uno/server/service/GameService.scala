@@ -14,7 +14,7 @@ class GameService(gameId: Int, deckService: DeckService) {
   private var _state = GameState(gameId)
   private var playerToActorRefs = Map.empty[String, ActorRef[Event]]
   private var confirmationApprovals = Map.empty[String, Boolean].withDefaultValue(false)
-  private var currentDeck: Deck = _
+  private var currentDeck: Deck = deckService.create()
 
   def removePlayer(name: String): Unit = {
     _state.player(name).map(Player(_)) match {
@@ -90,7 +90,6 @@ class GameService(gameId: Int, deckService: DeckService) {
     val _positions =
       positions match {
         case Nil =>
-          currentDeck = deckService.create()
           (0 until _state.numOfPlayer).toList
         case _ => positions
       }

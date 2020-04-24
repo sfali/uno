@@ -149,8 +149,6 @@ class GameSpec
   }
 
   private def validatePerformToss(clients: Array[WSProbe]): Unit = {
-    deckService.fileName = "toss-deck.json"
-
     var tossResult = TossResult(
       Cards(Some("Player1"), Card(Color.Blue, CardEntry.Five) :: Nil) ::
         Cards(Some("Player2"), Card(Color.Red, CardEntry.Four) :: Nil) ::

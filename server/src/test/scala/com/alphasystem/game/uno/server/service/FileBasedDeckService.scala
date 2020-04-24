@@ -9,15 +9,10 @@ import io.circe.parser._
 
 class FileBasedDeckService extends DeckService {
 
-  private var _fileName: String = _
-
-  def fileName: String = _fileName
-
-  def fileName_=(fileName: String): Unit = _fileName = fileName
+  private val path = new File(getClass.getClassLoader.getResource(FileBasedDeckService.FileName).toURI).toPath
 
   override def create(): Deck = {
-    val path = new File(getClass.getClassLoader.getResource(fileName).toURI).toPath
-    decode[List[Card]](new String( Files.readAllBytes(path))) match {
+    decode[List[Card]](new String(Files.readAllBytes(path))) match {
       case Left(error) => throw error
       case Right(cards) => Deck(cards)
     }
@@ -26,4 +21,6 @@ class FileBasedDeckService extends DeckService {
 
 object FileBasedDeckService {
   def apply(): FileBasedDeckService = new FileBasedDeckService()
+
+  private val FileName = "deck.json"
 }
