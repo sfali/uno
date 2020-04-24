@@ -8,7 +8,7 @@ package object route {
 
   implicit class RequestEnvelopeOps(src: RequestEnvelope) {
     def toCommand(gameId: Int, playerName: String): ShardingEnvelope[GameBehavior.Command] =
-      src.requestType match {
+      src.`type` match {
         case RequestType.StartGame => ShardingEnvelope(gameId.toString, GameBehavior.StartGame(playerName))
         case RequestType.StartGameApproved =>
           ShardingEnvelope(gameId.toString, GameBehavior.ConfirmationApproval(playerName, approved = true))

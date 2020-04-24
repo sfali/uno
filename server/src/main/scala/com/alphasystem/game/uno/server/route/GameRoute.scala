@@ -58,7 +58,7 @@ class GameRoute private(gameActorRef: ActorRef[ShardingEnvelope[GameBehavior.Com
                         throw error
 
                       case Right(requestEnvelope) =>
-                        log.info("Received message of type: {}", requestEnvelope.requestType)
+                        log.info("Received message of type: {}", requestEnvelope.`type`)
                         requestEnvelope.toCommand(gameId, playerName)
                     }
                   case message =>
