@@ -49,18 +49,7 @@ class PlayersSkin extends SkinBase<PlayersView> {
                 }
 
                 if (c.wasRemoved()) {
-                    c.getRemoved().forEach(
-                            playerDetail -> {
-                                final int size = players.size();
-                                final int position = getPlayerPosition(playerDetail);
-                                if (position > -1) {
-                                    players.remove(position);
-                                    playerViewerPane.getChildren().remove(position);
-                                    playerViewerPane.getColumnConstraints().remove(size - 1);
-                                    reinitializeView();
-                                }
-                            }
-                    );
+                    c.getRemoved().forEach(this::removePlayer);
                 }
             }
         };
@@ -71,6 +60,17 @@ class PlayersSkin extends SkinBase<PlayersView> {
         players.add(playerView);
         playerViewerPane.addColumn(players.size() - 1, playerView);
         playerViewerPane.getColumnConstraints().add(createColumnConstraints());
+    }
+
+    private void removePlayer(PlayerDetail playerDetail) {
+        final int size = players.size();
+        final int position = getPlayerPosition(playerDetail);
+        if (position > -1) {
+            players.remove(position);
+            playerViewerPane.getChildren().remove(position);
+            playerViewerPane.getColumnConstraints().remove(size - 1);
+            reinitializeView();
+        }
     }
 
     private void reinitializeView() {
