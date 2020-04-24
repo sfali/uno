@@ -1,15 +1,15 @@
 package com.alphasystem.uno.test;
 
-import com.alphasystem.game.uno.client.ui.control.delegate.PlayerView;
 import javafx.application.Application;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
+import javafx.scene.effect.InnerShadow;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.ColumnConstraints;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
@@ -33,32 +33,8 @@ public class ViewTest extends Application {
         primaryStage.setWidth(bounds.getWidth() / 4);
         primaryStage.setHeight(bounds.getHeight() / 4);
 
-        final GridPane gridPane = new GridPane();
-        gridPane.setPadding(new Insets(5, 5, 5, 5));
-        gridPane.setHgap(5);
-        gridPane.setAlignment(Pos.CENTER);
-        gridPane.addColumn(0, createPlayer("Player1", 100, false));
-        gridPane.addColumn(1, createPlayer("Player2", 0, false));
-        gridPane.addColumn(2, createPlayer("Player3", 0, true));
-        gridPane.addColumn(3, createPlayer("Player4", 0, false));
-        gridPane.addColumn(4, createPlayer("Player5", 0, false));
-        gridPane.addColumn(5, createPlayer("Player6", 0, false));
-        gridPane.addColumn(6, createPlayer("Player7", 0, false));
-        gridPane.addColumn(7, createPlayer("Player8", 0, false));
-        gridPane.addColumn(8, createPlayer("Player9", 0, false));
-        gridPane.getColumnConstraints().addAll(
-                createColumnConstraints(),
-                createColumnConstraints(),
-                createColumnConstraints(),
-                createColumnConstraints(),
-                createColumnConstraints(),
-                createColumnConstraints(),
-                createColumnConstraints(),
-                createColumnConstraints(),
-                createColumnConstraints());
-
         final BorderPane borderPane = new BorderPane();
-        borderPane.setTop(gridPane);
+        borderPane.setCenter(createText());
 
         Scene scene = new Scene(borderPane);
         primaryStage.setMaximized(true);
@@ -67,18 +43,18 @@ public class ViewTest extends Application {
         primaryStage.show();
     }
 
-    private PlayerView createPlayer(String name, int points, boolean active) {
-        final PlayerView playerView = new PlayerView();
-        playerView.setName(name);
-        playerView.setPoints(points);
-        playerView.setActive(active);
-        return playerView;
-    }
+    private Text createText() {
+        InnerShadow is = new InnerShadow();
+        is.setOffsetX(4.0f);
+        is.setOffsetY(4.0f);
 
-    private ColumnConstraints createColumnConstraints() {
-        final ColumnConstraints columnConstraints = new ColumnConstraints();
-        columnConstraints.setMaxWidth(Double.MAX_VALUE);
-        columnConstraints.setHgrow(Priority.ALWAYS);
-        return columnConstraints;
+        Text t = new Text();
+        t.setEffect(is);
+        t.setText("Welcome to UNO");
+        t.setTextAlignment(TextAlignment.CENTER);
+        t.setFill(Color.GREENYELLOW);
+        t.setFont(Font.font(null, FontWeight.BOLD, 80));
+
+        return t;
     }
 }

@@ -8,7 +8,7 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketUpgradeRespon
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.typed.scaladsl.ActorSource
-import com.alphasystem.game.uno.client.ui.control.{CardsView, PlayersView}
+import com.alphasystem.game.uno.client.ui.control.{CardsView, PlayersView, PlayingAreaView}
 import com.alphasystem.game.uno.model.request.RequestEnvelope
 import com.alphasystem.game.uno.model.response.{PlayerInfo, ResponseEnvelope, ResponseType}
 import io.circe.generic.auto._
@@ -37,6 +37,8 @@ object Client extends JFXApp {
   private lazy val playersView = PlayersView()
 
   private lazy val cardsView = CardsView()
+
+  private lazy val playingAreaView = PlayingAreaView()
 
   private lazy val controller = UIController(playersView)
 
@@ -144,7 +146,8 @@ object Client extends JFXApp {
 
       scene = new Scene {
         private val pane = new BorderPane()
-        pane.setCenter(playersView)
+        pane.setTop(playersView)
+        pane.setCenter(playingAreaView)
         pane.setBottom(Borders.wrap(cardsView).etchedBorder().build().build())
         root = pane
         maximized = true
