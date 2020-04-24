@@ -10,7 +10,7 @@ import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.typed.scaladsl.ActorSource
 import com.alphasystem.game.uno.client.ui.control.{CardsView, PlayersView}
 import com.alphasystem.game.uno.model.request.RequestEnvelope
-import com.alphasystem.game.uno.model.response.{PlayerJoined, ResponseEnvelope, ResponseType}
+import com.alphasystem.game.uno.model.response.{PlayerInfo, ResponseEnvelope, ResponseType}
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
@@ -85,10 +85,12 @@ object Client extends JFXApp {
       responseEnvelope =>
         responseEnvelope.`type` match {
           case ResponseType.GameJoined =>
-            val response = responseEnvelope.payload.asInstanceOf[PlayerJoined]
+            val response = responseEnvelope.payload.asInstanceOf[PlayerInfo]
             runLater(controller.handleGameJoin(response.player, response.otherPlayers))
           case ResponseType.NewPlayerJoined =>
-            runLater(controller.handlePlayerJoin(responseEnvelope.payload.asInstanceOf[PlayerJoined].player))
+            runLater(controller.handlePlayerJoin(responseEnvelope.payload.asInstanceOf[PlayerInfo].player))
+          case ResponseType.PlayerLeft =>
+            runLater(controller.handlePlayerLeft(responseEnvelope.payload.asInstanceOf[PlayerInfo].player))
           case ResponseType.StartGameRequested => ???
           case ResponseType.InitiatingToss => ???
           case ResponseType.TossResult => ???

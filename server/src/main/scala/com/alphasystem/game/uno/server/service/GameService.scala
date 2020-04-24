@@ -16,7 +16,19 @@ class GameService(gameId: Int, deckService: DeckService) {
   private var confirmationApprovals = Map.empty[String, Boolean].withDefaultValue(false)
   private var currentDeck: Deck = _
 
-  def removePlayer(name: String): Unit = _state = _state.removePlayer(name)
+  def removePlayer(name: String): Unit = {
+    _state.player(name).map(Player(_)) match {
+      case Some(player) =>
+        _state = _state.removePlayer(name)
+        playerToActorRefs -= name
+        playerToActorRefs
+          .foreach {
+            case (_, actorRef) =>
+              actorRef ! ResponseEvent(ResponseEnvelope(ResponseType.PlayerLeft, PlayerInfo(player)))
+          }
+      case None => // do nothing
+    }
+  }
 
   def joinGame(name: String, replyTo: ActorRef[Event]): Boolean = {
     log.info("Player '{}' is about to join", name)
@@ -29,9 +41,9 @@ class GameService(gameId: Int, deckService: DeckService) {
         case (name, actorRef) =>
           val event =
             if (name == playerDetail.name)
-              ResponseEvent(ResponseEnvelope(ResponseType.GameJoined, PlayerJoined(Player(playerDetail), otherPlayers)))
+              ResponseEvent(ResponseEnvelope(ResponseType.GameJoined, PlayerInfo(Player(playerDetail), otherPlayers)))
             else
-              ResponseEvent(ResponseEnvelope(ResponseType.NewPlayerJoined, PlayerJoined(Player(playerDetail))))
+              ResponseEvent(ResponseEnvelope(ResponseType.NewPlayerJoined, PlayerInfo(Player(playerDetail))))
           actorRef ! event
       }
     log.info("Player '{}' is joined", name)

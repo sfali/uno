@@ -6,7 +6,7 @@ sealed trait ResponsePayload
 
 final case class Empty() extends ResponsePayload
 
-final case class PlayerJoined(player: Player, otherPlayers: List[Player] = Nil) extends ResponsePayload
+final case class PlayerInfo(player: Player, otherPlayers: List[Player] = Nil) extends ResponsePayload
 
 final case class Message(playerName: Option[String] = None,
                          code: MessageCode,

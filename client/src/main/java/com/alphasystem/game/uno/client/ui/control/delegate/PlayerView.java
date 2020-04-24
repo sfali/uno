@@ -7,6 +7,7 @@ import javafx.scene.control.Skin;
 public final class PlayerView extends Control {
 
     private final StringProperty name = new SimpleStringProperty(this, "name");
+    private final StringProperty displayName = new SimpleStringProperty(this, "displayName");
     private final IntegerProperty points = new SimpleIntegerProperty(this, "points", -1);
     private final IntegerProperty numberOfCardsLeft = new SimpleIntegerProperty(this, "numberOfCardsLeft", 0);
     private final BooleanProperty active = new SimpleBooleanProperty(this, "active", false);
@@ -30,6 +31,18 @@ public final class PlayerView extends Control {
 
     public void setName(String name) {
         this.name.set(name);
+    }
+
+    public String getDisplayName() {
+        return displayName.get();
+    }
+
+    public StringProperty displayNameProperty() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName.set(displayName);
     }
 
     public int getPoints() {

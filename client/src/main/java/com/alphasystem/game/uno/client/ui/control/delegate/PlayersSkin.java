@@ -14,6 +14,7 @@ import javafx.util.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 class PlayersSkin extends SkinBase<PlayersView> {
@@ -44,23 +45,19 @@ class PlayersSkin extends SkinBase<PlayersView> {
         return c -> {
             while (c.next()) {
                 if (c.wasAdded()) {
-                    c.getAddedSubList().forEach(
-                            playerDetail -> {
-                                final PlayerView playerView = createPlayerView(playerDetail);
-                                players.add(playerView);
-                                playerViewerPane.addColumn(players.size() - 1, playerView);
-                                playerViewerPane.getColumnConstraints().add(createColumnConstraints());
-                            }
-                    );
+                    c.getAddedSubList().forEach(this::addPlayer);
                 }
 
                 if (c.wasRemoved()) {
                     c.getRemoved().forEach(
                             playerDetail -> {
+                                final int size = players.size();
                                 final int position = getPlayerPosition(playerDetail);
                                 if (position > -1) {
+                                    players.remove(position);
                                     playerViewerPane.getChildren().remove(position);
-                                    playerViewerPane.getColumnConstraints().remove(position);
+                                    playerViewerPane.getColumnConstraints().remove(size - 1);
+                                    reinitializeView();
                                 }
                             }
                     );
@@ -69,13 +66,34 @@ class PlayersSkin extends SkinBase<PlayersView> {
         };
     }
 
+    private void addPlayer(PlayerDetail playerDetail) {
+        final PlayerView playerView = createPlayerView(playerDetail);
+        players.add(playerView);
+        playerViewerPane.addColumn(players.size() - 1, playerView);
+        playerViewerPane.getColumnConstraints().add(createColumnConstraints());
+    }
+
+    private void reinitializeView() {
+        final List<PlayerDetail> playerDetails = players
+                .stream()
+                .map(playerView -> (PlayerDetail) playerView.getUserData())
+                .collect(Collectors.toList());
+        players.clear();
+        final int size = playerDetails.size();
+        playerViewerPane.getChildren().remove(0, size);
+        playerViewerPane.getColumnConstraints().remove(0, size);
+        playerDetails.forEach(this::addPlayer);
+    }
+
     private PlayerView createPlayerView(PlayerDetail playerDetail) {
         final PlayerView playerView = new PlayerView();
         String playerName = playerDetail.name();
+        playerView.setName(playerName);
         if (playerName.equals(getSkinnable().getMyPlayer().name())) {
             playerName = "You";
         }
-        playerView.setName(playerName);
+        playerView.setDisplayName(playerName);
+        playerView.setUserData(playerDetail);
         return playerView;
     }
 
@@ -96,7 +114,7 @@ class PlayersSkin extends SkinBase<PlayersView> {
         }
     }
 
-    private int getPlayerPosition(PlayerDetail playerDetail) {
+    private int getPlayerPosition(final PlayerDetail playerDetail) {
         int position = -1;
         if (playerDetail != null) {
             final Optional<Integer> first = IntStream

@@ -34,7 +34,7 @@ class PlayerSkin extends SkinBase<PlayerView> {
         final TitledPane titledPane = new TitledPane();
         titledPane.setCollapsible(false);
         titledPane.setFont(Util.FONT_TITLE_INACTIVE);
-        titledPane.textProperty().bind(getSkinnable().nameProperty());
+        titledPane.textProperty().bind(getSkinnable().displayNameProperty());
         getSkinnable().activeProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 titledPane.setFont(Util.FONT_TITLE_ACTIVE);

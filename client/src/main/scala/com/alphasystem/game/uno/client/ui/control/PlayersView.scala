@@ -17,6 +17,8 @@ class PlayersView private(override val delegate: JPlayersView) extends Node(dele
 
   def addPlayer(playerDetail: PlayerDetail): Unit = delegate.addPlayer(playerDetail)
 
+  def removePlayer(playerDetail: PlayerDetail): Unit = delegate.removePlayer(playerDetail)
+
   def myPlayer: PlayerDetail = delegate.getMyPlayer
 
   def myPlayer_=(playerDetail: PlayerDetail): Unit = delegate.setMyPlayer(playerDetail)

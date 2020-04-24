@@ -37,6 +37,10 @@ public final class PlayersView extends Control {
         playerDetails.add(playerDetail);
     }
 
+    public void removePlayer(final PlayerDetail playerDetail) {
+        playerDetails.removeAll(playerDetail);
+    }
+
     public PlayerDetail getMyPlayer() {
         return myPlayer.get();
     }

@@ -202,13 +202,13 @@ class GameSpec
   private def validateGameJoined(client: WSProbe,
                                  player: Player,
                                  otherPlayers: List[Player]): Unit = {
-    val responseEnvelope = ResponseEnvelope(ResponseType.GameJoined, PlayerJoined(player, otherPlayers))
+    val responseEnvelope = ResponseEnvelope(ResponseType.GameJoined, PlayerInfo(player, otherPlayers))
     client.expectMessage(responseEnvelope.asJson.noSpaces)
   }
 
   private def validatePlayerJoined(client: WSProbe,
                                    player: Player): Unit = {
-    val responseEnvelope = ResponseEnvelope(ResponseType.NewPlayerJoined, PlayerJoined(player))
+    val responseEnvelope = ResponseEnvelope(ResponseType.NewPlayerJoined, PlayerInfo(player))
     client.expectMessage(responseEnvelope.asJson.noSpaces)
   }
 

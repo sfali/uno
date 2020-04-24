@@ -13,6 +13,8 @@ class UIController(playersView: PlayersView) {
   }
 
   def handlePlayerJoin(player: Player): Unit = playersView.addPlayer(player.toPlayerDetail)
+
+  def handlePlayerLeft(player: Player): Unit = playersView.removePlayer(player.toPlayerDetail)
 }
 
 object UIController {
