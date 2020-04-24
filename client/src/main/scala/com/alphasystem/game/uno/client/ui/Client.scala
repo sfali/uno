@@ -88,7 +88,7 @@ object Client extends JFXApp {
             val response = responseEnvelope.payload.asInstanceOf[PlayerInfo]
             runLater(controller.handleGameJoin(response.player, response.otherPlayers))
           case ResponseType.NewPlayerJoined =>
-            runLater(controller.handlePlayerJoin(responseEnvelope.payload.asInstanceOf[PlayerInfo].player))
+            runLater(controller.handlePlayerJoined(responseEnvelope.payload.asInstanceOf[PlayerInfo].player))
           case ResponseType.PlayerLeft =>
             runLater(controller.handlePlayerLeft(responseEnvelope.payload.asInstanceOf[PlayerInfo].player))
           case ResponseType.StartGameRequested => ???
