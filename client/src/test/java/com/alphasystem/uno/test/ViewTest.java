@@ -1,15 +1,11 @@
 package com.alphasystem.uno.test;
 
+import com.alphasystem.game.uno.client.ui.control.delegate.CardView;
+import com.alphasystem.game.uno.model.Card;
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
-import javafx.scene.effect.InnerShadow;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextAlignment;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
@@ -34,7 +30,7 @@ public class ViewTest extends Application {
         primaryStage.setHeight(bounds.getHeight() / 4);
 
         final BorderPane borderPane = new BorderPane();
-        borderPane.setCenter(createText());
+        borderPane.setRight(createCardView());
 
         Scene scene = new Scene(borderPane);
         primaryStage.setMaximized(true);
@@ -43,18 +39,13 @@ public class ViewTest extends Application {
         primaryStage.show();
     }
 
-    private Text createText() {
-        InnerShadow is = new InnerShadow();
-        is.setOffsetX(4.0f);
-        is.setOffsetY(4.0f);
-
-        Text t = new Text();
-        t.setEffect(is);
-        t.setText("Welcome to UNO");
-        t.setTextAlignment(TextAlignment.CENTER);
-        t.setFill(Color.GREENYELLOW);
-        t.setFont(Font.font(null, FontWeight.BOLD, 80));
-
-        return t;
+    private CardView createCardView() {
+        final CardView cardView = new CardView();
+        cardView.setFitHeight(256);
+        cardView.setPlayerName("Player1");
+        cardView.setSelected(true);
+        cardView.setCard(Card.create("Red", "Six"));
+        return cardView;
     }
+
 }
