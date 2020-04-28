@@ -48,6 +48,11 @@ class GameService(gameId: Int, deckService: DeckService) {
           actorRef ! event
       }
     log.info("Player '{}' is joined", name)
+    if (_state.numOfPlayer == MinNumberOfPlayers) {
+      // game has now two players, signal the first player to start game
+      val playerName = _state.player(0).name
+      playerToActorRefs(playerName) ! ResponseEvent(ResponseEnvelope(ResponseType.CanStartGame, Empty()))
+    }
     _state.reachedCapacity
   }
 

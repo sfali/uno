@@ -14,6 +14,8 @@ object ResponseType extends Enum[ResponseType] with CirceEnum[ResponseType] {
 
   final case object PlayerLeft extends ResponseType
 
+  final case object CanStartGame extends ResponseType
+
   final case object StartGameRequested extends ResponseType
 
   final case object InitiatingToss extends ResponseType
