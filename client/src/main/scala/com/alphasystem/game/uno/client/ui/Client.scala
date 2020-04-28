@@ -8,7 +8,7 @@ import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketUpgradeRespon
 import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.typed.scaladsl.ActorSource
-import com.alphasystem.game.uno.client.ui.control.{CardsView, PlayersView, PlayingAreaView}
+import com.alphasystem.game.uno.client.ui.control.{CardsView, PlayersView, PlayingAreaView, ToolsView}
 import com.alphasystem.game.uno.model.request.RequestEnvelope
 import com.alphasystem.game.uno.model.response.{PlayerInfo, ResponseEnvelope, ResponseType}
 import io.circe.parser._
@@ -33,13 +33,15 @@ object Client extends JFXApp {
 
   private lazy val log = system.log
 
+  private lazy val toolsView = ToolsView()
+
   private lazy val playersView = PlayersView()
 
   private lazy val cardsView = CardsView()
 
   private lazy val playingAreaView = PlayingAreaView()
 
-  private lazy val controller = UIController(playersView)
+  private lazy val controller = UIController(playersView, toolsView)
 
   private var inputSource: ActorRef[RequestEnvelope] = _
 
@@ -92,6 +94,8 @@ object Client extends JFXApp {
             runLater(controller.handlePlayerJoined(responseEnvelope.payload.asInstanceOf[PlayerInfo].player))
           case ResponseType.PlayerLeft =>
             runLater(controller.handlePlayerLeft(responseEnvelope.payload.asInstanceOf[PlayerInfo].player))
+          case ResponseType.CanStartGame =>
+            runLater(controller.handleStartGame(true))
           case ResponseType.StartGameRequested => ???
           case ResponseType.InitiatingToss => ???
           case ResponseType.TossResult => ???
@@ -144,8 +148,11 @@ object Client extends JFXApp {
       maximized = true
 
       scene = new Scene {
+        private val topPane = new BorderPane()
+        topPane.setTop(toolsView)
+        topPane.setBottom(playersView)
         private val pane = new BorderPane()
-        pane.setTop(playersView)
+        pane.setTop(topPane)
         pane.setCenter(playingAreaView)
         pane.setBottom(Borders.wrap(cardsView).etchedBorder().build().build())
         root = pane

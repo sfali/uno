@@ -1,12 +1,12 @@
 package com.alphasystem.game.uno.client.ui
 
-import com.alphasystem.game.uno.client.ui.control.PlayersView
+import com.alphasystem.game.uno.client.ui.control.{PlayersView, ToolsView}
 import com.alphasystem.game.uno.model.{Player, PlayerDetail}
 import javafx.geometry.Pos
 import javafx.util.Duration
 import org.controlsfx.control.Notifications
 
-class UIController(playersView: PlayersView) {
+class UIController(playersView: PlayersView, toolsView: ToolsView) {
 
   private var myPlayer: PlayerDetail = _
 
@@ -27,6 +27,10 @@ class UIController(playersView: PlayersView) {
     notifyPlayerMovement(player, joined = false)
   }
 
+  def handleStartGame(enable: Boolean): Unit = {
+    toolsView.enableStartGameButton = enable
+  }
+
   private def notifyPlayerMovement(player: Player, joined: Boolean = true): Unit = {
     if (player.name != myPlayer.name) {
       val title = if (joined) "Player Joined" else "Player Left"
@@ -43,5 +47,6 @@ class UIController(playersView: PlayersView) {
 }
 
 object UIController {
-  def apply(gameView: PlayersView): UIController = new UIController(gameView)
+  def apply(gameView: PlayersView, toolsView: ToolsView): UIController =
+    new UIController(gameView, toolsView)
 }
