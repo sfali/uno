@@ -107,7 +107,11 @@ class GameBehavior private(context: ActorContext[Command],
         // There is a indication to start game.
         // If we reached max capacity, then start the game
         // Otherwise ask other players for their consent
-        if (gameService.state.reachedCapacity) {
+        if (!gameService.state.hasMinimumCapacity) {
+          // start game request came but minimum capacity hasn't reached
+          gameService.illegalAccess(name)
+          joinGame
+        } else if (gameService.state.reachedCapacity) {
           // TODO: start with toss to find who would start the game
           Behaviors.same
         } else {
