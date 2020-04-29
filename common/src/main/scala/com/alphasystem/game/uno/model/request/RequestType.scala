@@ -8,6 +8,8 @@ sealed trait RequestType extends EnumEntry with Hyphencase
 object RequestType extends Enum[RequestType] with CirceEnum[RequestType] {
   override def values: IndexedSeq[RequestType] = findValues
 
+  final case object Fail extends RequestType
+
   /**
    * Command to start a game
    */
@@ -16,4 +18,6 @@ object RequestType extends Enum[RequestType] with CirceEnum[RequestType] {
   final case object StartGameApproved extends RequestType
 
   final case object StartGameRejected extends RequestType
+
+  final case object GameEnded extends RequestType
 }
