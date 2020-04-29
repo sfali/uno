@@ -1,6 +1,7 @@
 package com.alphasystem.uno.test;
 
 import com.alphasystem.game.uno.client.ui.control.delegate.CardView;
+import com.alphasystem.game.uno.client.ui.control.delegate.GameModeSelectionView;
 import com.alphasystem.game.uno.model.Card;
 import javafx.application.Application;
 import javafx.geometry.Rectangle2D;
@@ -30,7 +31,7 @@ public class ViewTest extends Application {
         primaryStage.setHeight(bounds.getHeight() / 4);
 
         final BorderPane borderPane = new BorderPane();
-        borderPane.setRight(createCardView());
+        borderPane.setRight(new GameModeSelectionView());
 
         Scene scene = new Scene(borderPane);
         primaryStage.setMaximized(true);

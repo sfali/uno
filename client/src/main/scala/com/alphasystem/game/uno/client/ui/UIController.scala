@@ -1,14 +1,39 @@
 package com.alphasystem.game.uno.client.ui
 
-import com.alphasystem.game.uno.client.ui.control.{PlayersView, ToolsView}
-import com.alphasystem.game.uno.model.{Player, PlayerDetail}
+import com.alphasystem.game.uno.client.ui.control.{GameModeSelectionDialog, PlayersView, ToolsView}
+import com.alphasystem.game.uno.model.{GameType, Player, PlayerDetail}
 import javafx.geometry.Pos
 import javafx.util.Duration
 import org.controlsfx.control.Notifications
+import scalafx.application.JFXApp.PrimaryStage
+import scalafx.beans.property.ObjectProperty
 
-class UIController(playersView: PlayersView, toolsView: ToolsView) {
+class UIController(stage: PrimaryStage,
+                   playersView: PlayersView,
+                   toolsView: ToolsView) {
 
   private var myPlayer: PlayerDetail = _
+  private val _gameType: ObjectProperty[GameType] = ObjectProperty(this, "gameType", null)
+  private val gameModeSelectionDialog = new GameModeSelectionDialog(stage)
+
+  toolsView.startGameRequestedProperty.addListener {
+    (_, _, nv) =>
+      if (nv) {
+        val maybeGameMode = gameModeSelectionDialog.showAndWait()
+        maybeGameMode match {
+          case Some(gameMode) =>
+            gameType = gameMode.asInstanceOf[GameType]
+            toolsView.enableStartGameButton = false
+          case None =>
+            // canceled
+            toolsView.enableStartGameButton = true
+        }
+      }
+  }
+
+  def gameType: GameType = _gameType.value
+
+  def gameType_=(gameType: GameType): Unit = _gameType.value = gameType
 
   def handleGameJoin(player: Player, otherPlayers: List[Player]): Unit = {
     myPlayer = player.toPlayerDetail
@@ -47,6 +72,7 @@ class UIController(playersView: PlayersView, toolsView: ToolsView) {
 }
 
 object UIController {
-  def apply(gameView: PlayersView, toolsView: ToolsView): UIController =
-    new UIController(gameView, toolsView)
+  def apply(stage: PrimaryStage,
+            gameView: PlayersView,
+            toolsView: ToolsView): UIController = new UIController(stage, gameView, toolsView)
 }

@@ -16,9 +16,13 @@ class ToolsSkin extends SkinBase<ToolsView> {
     }
 
     private void setup() {
-        final Button startGameButton = new Button("Start Game");
+        final Button startGameButton = new Button("Start _Game");
         startGameButton.setDisable(true);
         startGameButton.disableProperty().bind(getSkinnable().enableStartGameButtonProperty().not());
+        startGameButton.setOnAction(event -> {
+            getSkinnable().setStartGameRequested(false);
+            getSkinnable().setStartGameRequested(true);
+        });
         toolBar.getItems().add(startGameButton);
     }
 }

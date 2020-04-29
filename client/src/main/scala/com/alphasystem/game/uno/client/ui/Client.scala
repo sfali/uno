@@ -41,7 +41,7 @@ object Client extends JFXApp {
 
   private lazy val playingAreaView = PlayingAreaView()
 
-  private lazy val controller = UIController(playersView, toolsView)
+  private lazy val controller = UIController(stage, playersView, toolsView)
 
   private var inputSource: ActorRef[RequestEnvelope] = _
 

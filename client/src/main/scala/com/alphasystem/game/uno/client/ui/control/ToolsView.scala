@@ -13,6 +13,10 @@ class ToolsView private(override val delegate: JToolsView)
   def enableStartGameButton: Boolean = delegate.getEnableStartGameButton
 
   def enableStartGameButton_=(enable: Boolean): Unit = delegate.setEnableStartGameButton(enable)
+
+  def startGameRequestedProperty: ReadOnlyBooleanProperty = delegate.startGameRequestedProperty()
+
+  def startGameRequested: Boolean = delegate.isStartGameRequested
 }
 
 object ToolsView {
