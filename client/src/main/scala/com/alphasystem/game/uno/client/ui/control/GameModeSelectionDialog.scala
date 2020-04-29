@@ -20,12 +20,7 @@ class GameModeSelectionDialog(owner: Window) extends Dialog[GameType] {
     val okButton = pane.lookupButton(ButtonType.OK)
     okButton.disableProperty().bind(gameModeSelectionView.selectedMode.isNull)
     resultConverter = bt => {
-      if (bt.text == "OK") {
-        gameModeSelectionView.getSelectedMode
-      } else {
-        null
-      }
-
+      if (bt.text == "OK") gameModeSelectionView.getSelectedMode else null
     }
   }
 }

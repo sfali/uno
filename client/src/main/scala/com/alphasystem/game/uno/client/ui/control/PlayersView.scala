@@ -11,6 +11,8 @@ import scala.jdk.CollectionConverters._
 
 class PlayersView private(override val delegate: JPlayersView) extends Node(delegate) {
 
+  def numberOfPlayers: Int = playerDetails.size()
+
   def playerDetails: ObservableList[PlayerDetail] = delegate.getPlayerDetails
 
   def playerDetails_=(playerDetails: List[PlayerDetail]): Unit = delegate.setPlayerDetails(playerDetails.asJava)
