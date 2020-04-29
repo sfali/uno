@@ -11,7 +11,6 @@ import javafx.util.Duration
 import org.controlsfx.control.Notifications
 import scalafx.animation.{KeyFrame, Timeline}
 import scalafx.application.JFXApp.PrimaryStage
-import scalafx.beans.property.ObjectProperty
 
 class UIController(stage: PrimaryStage,
                    inputSource: ActorRef[RequestEnvelope],
@@ -19,7 +18,7 @@ class UIController(stage: PrimaryStage,
                    toolsView: ToolsView) {
 
   private var myPlayer: PlayerDetail = _
-  private lazy val _gameType: ObjectProperty[GameType] = ObjectProperty(this, "gameType")
+  private var _gameType: GameType = _
   private lazy val gameModeSelectionDialog = new GameModeSelectionDialog(stage)
 
   toolsView.startGameRequestedProperty.addListener {
@@ -28,26 +27,20 @@ class UIController(stage: PrimaryStage,
         val maybeGameMode = gameModeSelectionDialog.showAndWait()
         maybeGameMode match {
           case Some(gameMode) =>
-            gameType = gameMode.asInstanceOf[GameType]
             toolsView.enableStartGameButton = false
+            _gameType = gameMode.asInstanceOf[GameType]
+            sendStartGameRequest(_gameType)
           case None =>
             // canceled
-            gameType = null
+            _gameType = null
             toolsView.enableStartGameButton = true
         }
       }
   }
 
-  _gameType.onChange {
-    (_, _, nv) =>
-      if (Option(nv).nonEmpty) {
-        sendStartGameRequest(nv)
-      }
-  }
+  def gameType: GameType = _gameType
 
-  def gameType: GameType = _gameType.value
-
-  def gameType_=(gameType: GameType): Unit = _gameType.value = gameType
+  def gameType_=(gameType: GameType): Unit = _gameType = gameType
 
   def handleGameJoin(player: Player, otherPlayers: List[Player]): Unit = {
     myPlayer = player.toPlayerDetail
