@@ -9,7 +9,7 @@ import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.typed.scaladsl.ActorSource
 import com.alphasystem.game.uno.client.ui.control.{CardsView, PlayersView, PlayingAreaView, ToolsView}
-import com.alphasystem.game.uno.model.request.RequestEnvelope
+import com.alphasystem.game.uno.model.request.{RequestEnvelope, RequestType}
 import com.alphasystem.game.uno.model.response.{PlayerInfo, ResponseEnvelope, ResponseType}
 import io.circe.parser._
 import io.circe.syntax._
@@ -31,6 +31,8 @@ object Client extends JFXApp {
 
   import system.dispatcher
 
+  private var inputSource: ActorRef[RequestEnvelope] = _
+
   private lazy val log = system.log
 
   private lazy val toolsView = ToolsView()
@@ -41,9 +43,7 @@ object Client extends JFXApp {
 
   private lazy val playingAreaView = PlayingAreaView()
 
-  private lazy val controller = UIController(stage, playersView, toolsView)
-
-  private var inputSource: ActorRef[RequestEnvelope] = _
+  private lazy val controller = UIController(stage, inputSource, playersView, toolsView)
 
   showInputDialog match {
     case Some(playerName) =>
@@ -59,11 +59,15 @@ object Client extends JFXApp {
     ActorSource
       .actorRef[RequestEnvelope](
         completionMatcher = {
-          case msg => log.warning("Completed: {}", msg)
+          case RequestEnvelope(RequestType.GameEnded, _) =>
+            log.info("GameEnded")
+            system.terminate()
+            System.exit(0)
         },
         failureMatcher = {
-          case msg =>
-            log.warning("Failed with message: {}", msg)
+          case RequestEnvelope(RequestType.Fail, _) =>
+            // should not apply to us
+            log.warning("Failed message")
             throw new IllegalArgumentException("?????")
         },
         bufferSize = Int.MaxValue,
@@ -111,7 +115,11 @@ object Client extends JFXApp {
   private def run(gameId: Int, playerName: String): Unit = {
     val wsConnection =
       webSocketSource
-        .map(command => TextMessage(command.asJson.noSpaces))
+        .map {
+          command =>
+            log.info("Outgoing message: {}", command.requestType)
+            TextMessage(command.asJson.deepDropNullValues.noSpaces)
+        }
         .viaMat(webSocketFlow(gameId, playerName))(Keep.both)
         .toMat(webSocketSink)(Keep.both)
         .run()
