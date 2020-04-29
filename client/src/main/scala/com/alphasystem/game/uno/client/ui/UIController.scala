@@ -1,20 +1,26 @@
 package com.alphasystem.game.uno.client.ui
 
+import akka.actor.typed.ActorRef
 import com.alphasystem.game.uno.client.ui.control.{GameModeSelectionDialog, PlayersView, ToolsView}
+import com.alphasystem.game.uno.model.request.{GameMode, RequestEnvelope, RequestPayload, RequestType}
 import com.alphasystem.game.uno.model.{GameType, Player, PlayerDetail}
+import javafx.animation.{KeyFrame => JKeyFrame}
+import javafx.event.ActionEvent
 import javafx.geometry.Pos
 import javafx.util.Duration
 import org.controlsfx.control.Notifications
+import scalafx.animation.{KeyFrame, Timeline}
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.beans.property.ObjectProperty
 
 class UIController(stage: PrimaryStage,
+                   inputSource: ActorRef[RequestEnvelope],
                    playersView: PlayersView,
                    toolsView: ToolsView) {
 
   private var myPlayer: PlayerDetail = _
-  private val _gameType: ObjectProperty[GameType] = ObjectProperty(this, "gameType", null)
-  private val gameModeSelectionDialog = new GameModeSelectionDialog(stage)
+  private lazy val _gameType: ObjectProperty[GameType] = ObjectProperty(this, "gameType")
+  private lazy val gameModeSelectionDialog = new GameModeSelectionDialog(stage)
 
   toolsView.startGameRequestedProperty.addListener {
     (_, _, nv) =>
@@ -26,8 +32,16 @@ class UIController(stage: PrimaryStage,
             toolsView.enableStartGameButton = false
           case None =>
             // canceled
+            gameType = null
             toolsView.enableStartGameButton = true
         }
+      }
+  }
+
+  _gameType.onChange {
+    (_, _, nv) =>
+      if (Option(nv).nonEmpty) {
+        sendStartGameRequest(nv)
       }
   }
 
@@ -57,6 +71,9 @@ class UIController(stage: PrimaryStage,
   }
 
   private def notifyPlayerMovement(player: Player, joined: Boolean = true): Unit = {
+    if (playersView.numberOfPlayers <= 1) {
+      toolsView.enableStartGameButton = false
+    }
     if (player.name != myPlayer.name) {
       val title = if (joined) "Player Joined" else "Player Left"
       val text = if (joined) s"${player.name} has joined the game." else s"${player.name} has left the game."
@@ -69,10 +86,24 @@ class UIController(stage: PrimaryStage,
         .showInformation()
     }
   }
+
+  private def sendStartGameRequest(gameType: GameType): Unit =
+    initiateDelayedRequest(RequestType.StartGame, GameMode(gameType))
+
+  private def initiateDelayedRequest(requestType: RequestType,
+                                     payload: RequestPayload,
+                                     duration: Double = 5): Unit = {
+    val delegate = new JKeyFrame(Duration.seconds(duration),
+      (_: ActionEvent) => inputSource ! RequestEnvelope(requestType, payload))
+    val timeline = new Timeline(2000)
+    timeline.keyFrames = Seq(new KeyFrame(delegate))
+    timeline.play()
+  }
 }
 
 object UIController {
   def apply(stage: PrimaryStage,
+            inputSource: ActorRef[RequestEnvelope],
             gameView: PlayersView,
-            toolsView: ToolsView): UIController = new UIController(stage, gameView, toolsView)
+            toolsView: ToolsView): UIController = new UIController(stage, inputSource, gameView, toolsView)
 }
