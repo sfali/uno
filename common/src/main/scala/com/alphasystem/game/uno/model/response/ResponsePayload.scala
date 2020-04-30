@@ -12,7 +12,7 @@ final case class Empty() extends ResponsePayload
 
 final case class PlayerInfo(player: Player, otherPlayers: List[Player] = Nil) extends ResponsePayload
 
-final case class GameMode(`type`: GameType) extends ResponsePayload
+final case class StartGameRequest(playerName: String, mode: GameType) extends ResponsePayload
 
 /*final case class Message(playerName: Option[String] = None,
                          code: MessageCode,
@@ -29,7 +29,7 @@ object ResponsePayload {
   implicit val ResponsePayloadEncoder: Encoder[ResponsePayload] =
     Encoder.instance {
       case event@TossResult(_) => event.asJson
-      case event@GameMode(_) => event.asJson
+      case event@StartGameRequest(_, _) => event.asJson
       case event@PlayerInfo(_, _) => event.asJson
       case event@ChatMessage(_, _) => event.asJson
       case event@Cards(_, _) => event.asJson
@@ -39,7 +39,7 @@ object ResponsePayload {
 
   implicit val ResponsePayloadDecoder: Decoder[ResponsePayload] =
     List[Decoder[ResponsePayload]](
-      Decoder[GameMode].widen,
+      Decoder[StartGameRequest].widen,
       Decoder[PlayerInfo].widen,
       //Decoder[Message].widen,
       Decoder[ChatMessage].widen,

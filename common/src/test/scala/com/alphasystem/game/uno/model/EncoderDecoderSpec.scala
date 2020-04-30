@@ -57,7 +57,7 @@ class EncoderDecoderSpec
     }
 
     it("should encode and decode GameMode payload") {
-      val responseEnvelope = ResponseEnvelope(ResponseType.StartGameRequested, response.GameMode(GameType.Classic))
+      val responseEnvelope = ResponseEnvelope(ResponseType.StartGameRequested, response.StartGameRequest("player1", GameType.Classic))
       val json = """{"type":"start-game-requested","payload":{"type":"Classic"}}"""
       validateResponseEnvelopeEncoding(responseEnvelope, json)
       validateResponseEnvelopeDecoding(responseEnvelope, json)

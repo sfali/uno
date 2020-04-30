@@ -132,7 +132,7 @@ class GameSpec
     (1 until clients.length)
       .foreach {
         pos =>
-          val response = ResponseEnvelope(ResponseType.StartGameRequested, GameMode(GameType.Classic))
+          val response = ResponseEnvelope(ResponseType.StartGameRequested, StartGameRequest(players(0).name, GameType.Classic))
           clients(pos).expectMessage(response.asJson.noSpaces)
       }
   }

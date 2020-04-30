@@ -56,16 +56,16 @@ class GameService(gameId: Int, deckService: DeckService) {
     _state.reachedCapacity
   }
 
-  def startGame(name: String, mode: GameType): Unit = {
-    log.info("Get request to start game from {}", name)
+  def startGame(playerName: String, mode: GameType): Unit = {
+    log.info("Get request to start game from {}", playerName)
     this.gameMode = mode
-    val validPlayer = _state.players.exists(_.name == name)
+    val validPlayer = _state.players.exists(_.name == playerName)
     // for invalid, we do not need to send back any response
     if (validPlayer) {
-      _state.players.filterNot(_.name == name).map(_.name)
+      _state.players.filterNot(_.name == playerName).map(_.name)
         .foreach {
           name =>
-            playerToActorRefs(name) ! ResponseEvent(ResponseEnvelope(ResponseType.StartGameRequested, GameMode(mode)))
+            playerToActorRefs(name) ! ResponseEvent(ResponseEnvelope(ResponseType.StartGameRequested, StartGameRequest(playerName, mode)))
         }
     }
   }
