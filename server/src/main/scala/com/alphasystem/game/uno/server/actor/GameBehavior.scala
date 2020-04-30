@@ -49,9 +49,7 @@ class GameBehavior private(context: ActorContext[Command],
         Behaviors.same
 
       case Idle =>
-        if (GameStatus.Started == gameService.state.status) {
-          context.log.warn("Did not get response from player '{}' in last one minute", gameService.state.currentPlayer.name)
-        }
+        // ignore time out
         Behaviors.same
 
       case Shutdown => Behaviors.stopped
@@ -86,9 +84,7 @@ class GameBehavior private(context: ActorContext[Command],
         Behaviors.same
 
       case Idle =>
-        if (GameStatus.Started == gameService.state.status) {
-          context.log.warn("Did not get response from player '{}' in last one minute", gameService.state.currentPlayer.name)
-        }
+        // ignore time out
         Behaviors.same
 
       case Shutdown => Behaviors.stopped
@@ -137,9 +133,7 @@ class GameBehavior private(context: ActorContext[Command],
         Behaviors.same
 
       case Idle =>
-        if (GameStatus.Started == gameService.state.status) {
-          context.log.warn("Did not get response from player '{}' in last one minute", gameService.state.currentPlayer.name)
-        }
+        // ignore time out
         Behaviors.same
 
       case Shutdown => Behaviors.stopped
@@ -191,9 +185,7 @@ class GameBehavior private(context: ActorContext[Command],
         Behaviors.same
 
       case Idle =>
-        if (GameStatus.Started == gameService.state.status) {
-          context.log.warn("Did not get response from player '{}' in last one minute", gameService.state.currentPlayer.name)
-        }
+        // ignore time out
         Behaviors.same
 
       case Shutdown => Behaviors.stopped
@@ -239,9 +231,7 @@ class GameBehavior private(context: ActorContext[Command],
         Behaviors.same
 
       case Idle =>
-        if (GameStatus.Started == gameService.state.status) {
-          context.log.warn("Did not get response from player '{}' in last one minute", gameService.state.currentPlayer.name)
-        }
+        // ignore time out
         Behaviors.same
 
       case Shutdown => Behaviors.stopped
