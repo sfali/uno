@@ -131,7 +131,6 @@ object Client extends JFXApp {
       .onComplete {
         case Success(_) =>
           log.info("connected to server.")
-          new JFXPanel() // This will initialize the JavaFx toolkit
           runLater(showUI())
 
         case Failure(ex) =>
