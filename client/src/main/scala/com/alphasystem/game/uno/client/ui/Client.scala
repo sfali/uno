@@ -10,7 +10,7 @@ import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.typed.scaladsl.ActorSource
 import com.alphasystem.game.uno.client.ui.control.{CardsView, PlayersView, PlayingAreaView, ToolsView}
 import com.alphasystem.game.uno.model.request.{RequestEnvelope, RequestType}
-import com.alphasystem.game.uno.model.response.{PlayerInfo, ResponseEnvelope, ResponseType}
+import com.alphasystem.game.uno.model.response.{PlayerInfo, ResponseEnvelope, ResponseType, StartGameRequest}
 import io.circe.parser._
 import io.circe.syntax._
 import org.controlsfx.tools.Borders
@@ -82,7 +82,7 @@ object Client extends JFXApp {
           decode[ResponseEnvelope](msg) match {
             case Left(error) => throw error
             case Right(responseEnvelope) =>
-              log.info("Request received: {}", responseEnvelope.`type`)
+              log.info("Incoming message: {}", responseEnvelope.`type`)
               responseEnvelope
           }
       }
@@ -100,7 +100,9 @@ object Client extends JFXApp {
             runLater(controller.handlePlayerLeft(responseEnvelope.payload.asInstanceOf[PlayerInfo].player))
           case ResponseType.CanStartGame =>
             runLater(controller.handleStartGame(true))
-          case ResponseType.StartGameRequested => ???
+          case ResponseType.StartGameRequested =>
+            val payload = responseEnvelope.payload.asInstanceOf[StartGameRequest]
+            runLater(controller.handleStartGameRequested(payload.playerName, payload.mode))
           case ResponseType.InitiatingToss => ???
           case ResponseType.TossResult => ???
           case ResponseType.IllegalAccess => ???

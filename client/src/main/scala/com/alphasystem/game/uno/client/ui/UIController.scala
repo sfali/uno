@@ -2,7 +2,7 @@ package com.alphasystem.game.uno.client.ui
 
 import akka.actor.typed.ActorRef
 import com.alphasystem.game.uno.client.ui.control.{GameModeSelectionDialog, PlayersView, ToolsView}
-import com.alphasystem.game.uno.model.request.{GameMode, RequestEnvelope, RequestPayload, RequestType}
+import com.alphasystem.game.uno.model.request._
 import com.alphasystem.game.uno.model.{GameType, Player, PlayerDetail}
 import javafx.animation.{KeyFrame => JKeyFrame}
 import javafx.event.ActionEvent
@@ -11,6 +11,9 @@ import javafx.util.Duration
 import org.controlsfx.control.Notifications
 import scalafx.animation.{KeyFrame, Timeline}
 import scalafx.application.JFXApp.PrimaryStage
+import scalafx.scene.control.Alert.AlertType
+import scalafx.scene.control.{Alert, ButtonType}
+import scalafx.stage.Modality
 
 class UIController(stage: PrimaryStage,
                    inputSource: ActorRef[RequestEnvelope],
@@ -42,6 +45,8 @@ class UIController(stage: PrimaryStage,
 
   def gameType_=(gameType: GameType): Unit = _gameType = gameType
 
+  // incoming requests
+
   def handleGameJoin(player: Player, otherPlayers: List[Player]): Unit = {
     myPlayer = player.toPlayerDetail
     playersView.myPlayer = myPlayer
@@ -63,6 +68,21 @@ class UIController(stage: PrimaryStage,
     toolsView.enableStartGameButton = enable
   }
 
+  def handleStartGameRequested(playerName: String, mode: GameType): Unit = {
+    val acceptButton = new ButtonType("Accept")
+    val rejectButton = new ButtonType("Reject")
+    val alert = new Alert(AlertType.Confirmation) {
+      initOwner(stage)
+      initModality(Modality.WindowModal)
+      title = "Start Game!"
+      headerText = s"Player $playerName has requested to start the game in ${mode.entryName} mode."
+      contentText = "Please either accept or reject."
+      buttonTypes = Seq(acceptButton, rejectButton)
+    }
+    val result = alert.showAndWait()
+    sendStartGameReply(result.contains(acceptButton))
+  }
+
   private def notifyPlayerMovement(player: Player, joined: Boolean = true): Unit = {
     if (playersView.numberOfPlayers <= 1) {
       toolsView.enableStartGameButton = false
@@ -80,8 +100,15 @@ class UIController(stage: PrimaryStage,
     }
   }
 
+  // Outgoing requests
+
   private def sendStartGameRequest(gameType: GameType): Unit =
     initiateDelayedRequest(RequestType.StartGame, GameMode(gameType))
+
+  private def sendStartGameReply(accepted: Boolean): Unit = {
+    val requestType = if (accepted) RequestType.StartGameApproved else RequestType.StartGameRejected
+    initiateDelayedRequest(requestType, Empty())
+  }
 
   private def initiateDelayedRequest(requestType: RequestType,
                                      payload: RequestPayload,
