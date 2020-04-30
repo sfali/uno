@@ -1,66 +1,96 @@
 package com.alphasystem.game.uno.server.service
 
 import akka.actor.typed.ActorRef
-import com.alphasystem.game.uno.server.model.game.{GameState, GameStatus, PlayDirection}
-import com.alphasystem.game.uno.model.response._
-import com.alphasystem.game.uno.model.Deck
-import org.slf4j.LoggerFactory
 import com.alphasystem.game.uno._
+import com.alphasystem.game.uno.model.response._
+import com.alphasystem.game.uno.model.{Deck, GameType, Player}
+import com.alphasystem.game.uno.server.model.game.{ApprovalStatus, GameState, GameStatus, PlayDirection}
 import com.alphasystem.game.uno.server.model.{Event, ResponseEvent}
+import org.slf4j.LoggerFactory
 
 class GameService(gameId: Int, deckService: DeckService) {
 
   private val log = LoggerFactory.getLogger(classOf[GameService])
   private var _state = GameState(gameId)
-  private var playerToActorRefs = Map.empty[Int, ActorRef[Event]]
-  private var confirmationApprovals = Map.empty[Int, Boolean].withDefaultValue(false)
-  private var currentDeck: Deck = _
+  private var gameMode: GameType = GameType.Classic
+  private var playerToActorRefs = Map.empty[String, ActorRef[Event]]
+  private var confirmationApprovals = Map.empty[String, Boolean]
+  private var currentDeck: Deck = deckService.create()
 
-  def removePlayer(name: String): Unit = _state = _state.removePlayer(name)
+  def removePlayer(name: String): Unit = {
+    _state.player(name).map(Player(_)) match {
+      case Some(player) =>
+        _state = _state.removePlayer(name)
+        playerToActorRefs -= name
+        playerToActorRefs
+          .foreach {
+            case (_, actorRef) =>
+              actorRef ! ResponseEvent(ResponseEnvelope(ResponseType.PlayerLeft, PlayerInfo(player)))
+          }
+      case None => // do nothing
+    }
+  }
 
   def joinGame(name: String, replyTo: ActorRef[Event]): Boolean = {
     log.info("Player '{}' is about to join", name)
-    val otherPlayers = _state.players.toList
+    val otherPlayers = _state.players.toList.map(Player(_))
     _state = _state.addPlayer(name)
-    val player = _state.player(_state.numOfPlayer - 1)
-    playerToActorRefs += player.position -> replyTo
+    val playerDetail = _state.player(_state.numOfPlayer - 1)
+    playerToActorRefs += playerDetail.name -> replyTo
     playerToActorRefs
       .foreach {
-        case (position, actorRef) =>
+        case (name, actorRef) =>
           val event =
-            if (position == player.position)
-              ResponseEvent(ResponseEnvelope(ResponseType.GameJoined, PlayerJoined(player, otherPlayers)))
+            if (name == playerDetail.name)
+              ResponseEvent(ResponseEnvelope(ResponseType.GameJoined, PlayerInfo(Player(playerDetail), otherPlayers)))
             else
-              ResponseEvent(ResponseEnvelope(ResponseType.NewPlayerJoined, PlayerJoined(player)))
+              ResponseEvent(ResponseEnvelope(ResponseType.NewPlayerJoined, PlayerInfo(Player(playerDetail))))
           actorRef ! event
       }
+    log.info("Player '{}' is joined", name)
+    sendCanStartGameMessage()
     _state.reachedCapacity
   }
 
-  def startGame(name: String): Unit = {
-    log.info("Get request to start game from {}", name)
-    val validPlayer = _state.players.exists(_.name == name)
+  def sendCanStartGameMessage(): Unit = {
+    if (_state.numOfPlayer == MinNumberOfPlayers) {
+      // game has now at least two players, signal the first player to start game
+      val playerName = _state.player(0).name
+      playerToActorRefs(playerName) ! ResponseEvent(ResponseEnvelope(ResponseType.CanStartGame, Empty()))
+    }
+  }
+
+  def startGame(playerName: String, mode: GameType): Unit = {
+    log.info("Get request to start game from {}", playerName)
+    this.gameMode = mode
+    val validPlayer = _state.players.exists(_.name == playerName)
     // for invalid, we do not need to send back any response
     if (validPlayer) {
-      _state.players.filterNot(_.name == name).map(_.position)
+      _state.players.filterNot(_.name == playerName).map(_.name)
         .foreach {
-          position =>
-            playerToActorRefs(position) ! ResponseEvent(ResponseEnvelope(ResponseType.StartGameRequested, Empty()))
+          name =>
+            playerToActorRefs(name) ! ResponseEvent(ResponseEnvelope(ResponseType.StartGameRequested, StartGameRequest(playerName, mode)))
         }
     }
   }
 
-  def startGameApprovals(name: String, approved: Boolean): Boolean = {
-    val position = _state.position(name).getOrElse(-1)
-    if (position >= 0) {
-      val s = if (approved) "approved " else "rejected"
-      log.info("Start game request is {} by {}", s, name)
-      confirmationApprovals += (position -> approved)
-      val acceptedCount = confirmationApprovals.count(_._2 == true).toDouble
-      val approvalPercentage = (acceptedCount / playerToActorRefs.size) * 100
-      approvalPercentage >= 50.0
-    } else false
-  }
+  def startGameApprovals(name: String, approved: Boolean): ApprovalStatus =
+    _state.player(name) match {
+      case Some(playerDetail) =>
+        val s = if (approved) "approved " else "rejected"
+        log.info("Start game request is {} by {}", s, name)
+        confirmationApprovals += (playerDetail.name -> approved)
+        // do not count the player who initiated the start game request
+        if (confirmationApprovals.size >= _state.numOfPlayer - 1) {
+          val acceptedCount = confirmationApprovals.count(_._2 == true).toDouble
+          val approvalPercentage = (acceptedCount / playerToActorRefs.size) * 100
+          if (approvalPercentage >= 50.0) ApprovalStatus.Approved else ApprovalStatus.Rejected
+        } else ApprovalStatus.Waiting
+
+      case None =>
+        // should not happen actor must handled this scenario already
+        throw new IllegalArgumentException(s"Unknown player: $name")
+    }
 
   def notifyGameStart(): Unit = {
     log.info("Updating game status to start")
@@ -76,7 +106,6 @@ class GameService(gameId: Int, deckService: DeckService) {
     val _positions =
       positions match {
         case Nil =>
-          currentDeck = deckService.create()
           (0 until _state.numOfPlayer).toList
         case _ => positions
       }
@@ -99,9 +128,8 @@ class GameService(gameId: Int, deckService: DeckService) {
   def illegalAccess(name: String): Unit =
     _state.player(name) match {
       case Some(player) =>
-        val position = player.position
         val envelope = ResponseEnvelope(ResponseType.IllegalAccess, Empty())
-        playerToActorRefs(position) ! ResponseEvent(envelope)
+        playerToActorRefs(player.name) ! ResponseEvent(envelope)
       case None => // do nothing
     }
 

@@ -2,7 +2,6 @@ package com.alphasystem.game.uno.client.ui.control
 
 import com.alphasystem.game.uno.client.ui.control.delegate.{CardView => JCardView}
 import com.alphasystem.game.uno.model.Card
-import javafx.beans.property
 import scalafx.Includes._
 import scalafx.beans.property._
 import scalafx.scene.Node
@@ -19,7 +18,7 @@ class CardView private(override val delegate: JCardView) extends Node(delegate) 
 
   def card_=(card: Card): Unit = delegate.setCard(card)
 
-  def playerName: property.StringProperty = delegate.playerNameProperty()
+  def playerName: StringProperty = delegate.playerNameProperty()
 
   def playerName_=(playerName: String): Unit = delegate.setPlayerName(playerName)
 

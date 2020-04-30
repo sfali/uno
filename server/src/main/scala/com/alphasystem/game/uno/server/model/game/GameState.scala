@@ -1,12 +1,12 @@
 package com.alphasystem.game.uno.server.model.game
 
 import com.alphasystem.game.uno._
-import com.alphasystem.game.uno.model.Player
+import com.alphasystem.game.uno.model.PlayerDetail
 
 case class GameState(id: Int,
                      direction: PlayDirection,
                      status: GameStatus,
-                     players: Array[Player],
+                     players: Array[PlayerDetail],
                      dealerId: Int,
                      previousPlayerId: Int,
                      currentPlayerId: Int) {
@@ -17,17 +17,15 @@ case class GameState(id: Int,
 
   def hasMinimumCapacity: Boolean = numOfPlayer >= MinNumberOfPlayers
 
-  def addPlayer(name: String): GameState = copy(players = players :+ Player(numOfPlayer, name))
+  def addPlayer(name: String): GameState = copy(players = players :+ PlayerDetail(name))
 
   def removePlayer(name: String): GameState = copy(players = players.filterNot(_.name == name))
 
-  def player(id: Int): Player = players(id)
+  def player(id: Int): PlayerDetail = players(id)
 
-  def player(name: String): Option[Player] = players.find(_.name == name)
+  def player(name: String): Option[PlayerDetail] = players.find(_.name == name)
 
-  def position(name: String): Option[Int] = player(name).map(_.position)
-
-  def currentPlayer: Player = players(currentPlayerId)
+  def currentPlayer: PlayerDetail = players(currentPlayerId)
 
   def updateStatus(status: GameStatus): GameState = copy(status = status)
 
@@ -77,7 +75,7 @@ object GameState {
   def apply(id: Int,
             direction: PlayDirection,
             status: GameStatus,
-            players: Array[Player],
+            players: Array[PlayerDetail],
             dealerId: Int,
             previousPlayer: Int,
             currentPlayer: Int): GameState =
@@ -86,7 +84,7 @@ object GameState {
   def apply(id: Int,
             direction: PlayDirection,
             status: GameStatus,
-            players: Array[Player],
+            players: Array[PlayerDetail],
             dealerId: Int): GameState =
     GameState(id, direction, status, players, dealerId, dealerId, -1)
 

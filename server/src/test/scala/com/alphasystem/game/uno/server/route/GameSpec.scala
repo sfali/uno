@@ -39,7 +39,7 @@ class GameSpec
 
   private val testKit = ActorTestKit("uno")
   private val probe = testKit.createTestProbe[Event]()
-  private val players = (0 to 4).map(pos => createPlayer(pos)).toArray
+  private val players = (0 to 4).map(pos => Player(createPlayer(pos))).toArray
   private lazy val gameActorRef = GameBehavior.init(testKit.system, deckService)
   private lazy val gameRoute = GameRoute(gameActorRef)
 
@@ -61,17 +61,12 @@ class GameSpec
 
   "Connect to websocket" in {
     val probe = WSProbe()
-    WS(uri(Player(0, "Player1"), 1), probe.flow) ~> gameRoute ~> check {
+    WS(uri(Player("Player1"), 1), probe.flow) ~> gameRoute ~> check {
       isWebSocketUpgrade shouldEqual true
     }
   }
 
-  "Add players" in {
-    val wsClients = Array(WSProbe(), WSProbe(), WSProbe(), WSProbe(), WSProbe())
-    players.map(_.position).foreach(validateJoinGame(1000, players, wsClients))
-  }
-
-  "Start game" in {
+  "Validate game" in {
     val gameId = 1001
     val expectedGameState =
       players.foldLeft(GameState(gameId)) {
@@ -82,6 +77,7 @@ class GameSpec
       validateJoinGame(0, clients)
       WS(uri(players(1), gameId), clients(1).flow) ~> gameRoute ~> check {
         validateJoinGame(1, clients)
+        validateCanStartGame(clients)
         WS(uri(players(2), gameId), clients(2).flow) ~> gameRoute ~> check {
           validateJoinGame(2, clients)
           WS(uri(players(3), gameId), clients(3).flow) ~> gameRoute ~> check {
@@ -101,11 +97,11 @@ class GameSpec
   }
 
   "Check game state" in {
-    val gameId = 1000
+    val gameId = 1001
     val gameState = getGameState(gameId)
     gameState.id shouldBe gameId
-    gameState.players.toList shouldBe players.toList
-    gameState.status shouldBe GameStatus.Initiated
+    gameState.players.toList.map(Player(_)) shouldBe players.toList
+    gameState.status shouldBe GameStatus.Started
   }
 
   private def getGameState(gameId: Int) = {
@@ -124,32 +120,36 @@ class GameSpec
     (0 until position).foreach(pos => validatePlayerJoined(clients(pos), players(position)))
   }
 
+  private def validateCanStartGame(clients: Array[WSProbe]): Unit = {
+    val client = clients(0)
+    val text = ResponseEnvelope(ResponseType.CanStartGame, Empty()).asJson.deepDropNullValues.noSpaces
+    client.expectMessage(text)
+  }
+
   private def validateStartGame(clients: Array[WSProbe]): Unit = {
     val client = clients(0)
-    val text = RequestEnvelope(RequestType.StartGame, request.Empty()).asJson.noSpaces
+    val text = RequestEnvelope(RequestType.StartGame, request.GameMode(GameType.Classic)).asJson.deepDropNullValues.noSpaces
     client.sendMessage(text)
     client.expectNoMessage()
     (1 until clients.length)
       .foreach {
         pos =>
-          val response = ResponseEnvelope(ResponseType.StartGameRequested, Empty())
-          clients(pos).expectMessage(response.asJson.noSpaces)
+          val response = ResponseEnvelope(ResponseType.StartGameRequested, StartGameRequest(players(0).name, GameType.Classic))
+          clients(pos).expectMessage(response.asJson.deepDropNullValues.noSpaces)
       }
   }
 
   private def validateStartGameConfirmation(clients: Array[WSProbe]): Unit = {
-    clients(2).sendMessage(RequestEnvelope(RequestType.StartGameRejected, request.Empty()).asJson.noSpaces)
+    clients(2).sendMessage(RequestEnvelope(RequestType.StartGameRejected, request.Empty()).asJson.deepDropNullValues.noSpaces)
     val requestEnvelope = RequestEnvelope(RequestType.StartGameApproved, request.Empty())
-    clients(1).sendMessage(requestEnvelope.asJson.noSpaces)
-    clients(3).sendMessage(requestEnvelope.asJson.noSpaces)
-    clients(4).sendMessage(requestEnvelope.asJson.noSpaces)
-    val text = ResponseEnvelope(ResponseType.InitiatingToss, Empty()).asJson.noSpaces
+    clients(1).sendMessage(requestEnvelope.asJson.deepDropNullValues.noSpaces)
+    clients(3).sendMessage(requestEnvelope.asJson.deepDropNullValues.noSpaces)
+    clients(4).sendMessage(requestEnvelope.asJson.deepDropNullValues.noSpaces)
+    val text = ResponseEnvelope(ResponseType.InitiatingToss, Empty()).asJson.deepDropNullValues.noSpaces
     clients.foreach(client => client.expectMessage(text))
   }
 
   private def validatePerformToss(clients: Array[WSProbe]): Unit = {
-    deckService.fileName = "toss-deck.json"
-
     var tossResult = TossResult(
       Cards(Some("Player1"), Card(Color.Blue, CardEntry.Five) :: Nil) ::
         Cards(Some("Player2"), Card(Color.Red, CardEntry.Four) :: Nil) ::
@@ -159,7 +159,7 @@ class GameSpec
         Nil)
     var responseEnvelope = ResponseEnvelope(ResponseType.TossResult, tossResult)
     clients.foreach(client => client.expectNoMessage(3.seconds))
-    clients.foreach(client => client.expectMessage(responseEnvelope.asJson.noSpaces))
+    clients.foreach(client => client.expectMessage(responseEnvelope.asJson.deepDropNullValues.noSpaces))
 
     tossResult = TossResult(
       Cards(Some("Player3"), Card(Color.Yellow, CardEntry.Six) :: Nil) ::
@@ -167,8 +167,8 @@ class GameSpec
         Nil)
     responseEnvelope = ResponseEnvelope(ResponseType.TossResult, tossResult)
     clients.foreach(client => client.expectNoMessage(3.seconds))
-    clients(2).expectMessage(responseEnvelope.asJson.noSpaces)
-    clients(4).expectMessage(responseEnvelope.asJson.noSpaces)
+    clients(2).expectMessage(responseEnvelope.asJson.deepDropNullValues.noSpaces)
+    clients(4).expectMessage(responseEnvelope.asJson.deepDropNullValues.noSpaces)
 
     tossResult = TossResult(
       Cards(Some("Player3"), Card(Color.Green, CardEntry.Two) :: Nil) ::
@@ -176,23 +176,8 @@ class GameSpec
         Nil)
     responseEnvelope = ResponseEnvelope(ResponseType.TossResult, tossResult)
     clients.foreach(client => client.expectNoMessage(3.seconds))
-    clients(2).expectMessage(responseEnvelope.asJson.noSpaces)
-    clients(4).expectMessage(responseEnvelope.asJson.noSpaces)
-  }
-
-  private def validateJoinGame(gameId: Int,
-                               players: Array[Player],
-                               wsClients: Array[WSProbe])(position: Int): Unit = {
-    val player = players(position)
-    val client = wsClients(position)
-    WS(uri(player, gameId), client.flow) ~> gameRoute ~> check {
-      val otherPLayers = playersAlreadyJoined(position, players)
-      validateGameJoined(client, player, otherPLayers)
-      otherPLayers.map(_.position)
-        .foreach {
-          pos => validatePlayerJoined(wsClients(pos), player)
-        }
-    }
+    clients(2).expectMessage(responseEnvelope.asJson.deepDropNullValues.noSpaces)
+    clients(4).expectMessage(responseEnvelope.asJson.deepDropNullValues.noSpaces)
   }
 
   private def playersAlreadyJoined(position: Int, players: Array[Player]) =
@@ -201,14 +186,14 @@ class GameSpec
   private def validateGameJoined(client: WSProbe,
                                  player: Player,
                                  otherPlayers: List[Player]): Unit = {
-    val responseEnvelope = ResponseEnvelope(ResponseType.GameJoined, PlayerJoined(player, otherPlayers))
-    client.expectMessage(responseEnvelope.asJson.noSpaces)
+    val responseEnvelope = ResponseEnvelope(ResponseType.GameJoined, PlayerInfo(player, otherPlayers))
+    client.expectMessage(responseEnvelope.asJson.deepDropNullValues.noSpaces)
   }
 
   private def validatePlayerJoined(client: WSProbe,
                                    player: Player): Unit = {
-    val responseEnvelope = ResponseEnvelope(ResponseType.NewPlayerJoined, PlayerJoined(player))
-    client.expectMessage(responseEnvelope.asJson.noSpaces)
+    val responseEnvelope = ResponseEnvelope(ResponseType.NewPlayerJoined, PlayerInfo(player))
+    client.expectMessage(responseEnvelope.asJson.deepDropNullValues.noSpaces)
   }
 
   private def uri(player: Player, id: Int) = Uri(s"/gameId/$id/playerName/${player.name}")

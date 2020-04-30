@@ -8,17 +8,21 @@ sealed trait ResponseType extends EnumEntry with Hyphencase
 object ResponseType extends Enum[ResponseType] with CirceEnum[ResponseType] {
   override def values: IndexedSeq[ResponseType] = findValues
 
-  final case object None extends ResponseType
-
   final case object NewPlayerJoined extends ResponseType
 
   final case object GameJoined extends ResponseType
+
+  final case object PlayerLeft extends ResponseType
+
+  final case object CanStartGame extends ResponseType
 
   final case object StartGameRequested extends ResponseType
 
   final case object InitiatingToss extends ResponseType
 
   final case object TossResult extends ResponseType
+
+  final case object CardPlayed extends ResponseType
 
   final case object IllegalAccess extends ResponseType
 

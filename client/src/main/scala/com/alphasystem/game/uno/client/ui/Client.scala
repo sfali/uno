@@ -1,16 +1,19 @@
 package com.alphasystem.game.uno.client.ui
 
 import akka.Done
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorSystem
+import akka.actor.typed.ActorRef
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketUpgradeResponse}
+import akka.stream.OverflowStrategy
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.{CompletionStrategy, OverflowStrategy}
+import akka.stream.typed.scaladsl.ActorSource
+import com.alphasystem.game.uno.client.ui.control.{CardsView, PlayersView, PlayingAreaView, ToolsView}
 import com.alphasystem.game.uno.model.request.{RequestEnvelope, RequestType}
-import com.alphasystem.game.uno.model.response.{ResponseEnvelope, ResponseType}
+import com.alphasystem.game.uno.model.response.{PlayerInfo, ResponseEnvelope, ResponseType, StartGameRequest}
 import io.circe.parser._
 import io.circe.syntax._
-import scalafx.application
+import org.controlsfx.tools.Borders
 import scalafx.application.{JFXApp, Platform}
 import scalafx.geometry.Rectangle2D
 import scalafx.scene.Scene
@@ -28,9 +31,19 @@ object Client extends JFXApp {
 
   import system.dispatcher
 
+  private var inputSource: ActorRef[RequestEnvelope] = _
+
   private lazy val log = system.log
 
-  private var inputSource: ActorRef = _
+  private lazy val toolsView = ToolsView()
+
+  private lazy val playersView = PlayersView()
+
+  private lazy val cardsView = CardsView()
+
+  private lazy val playingAreaView = PlayingAreaView()
+
+  private lazy val controller = UIController(stage, inputSource, playersView, toolsView)
 
   showInputDialog match {
     case Some(playerName) =>
@@ -42,19 +55,26 @@ object Client extends JFXApp {
       System.exit(-2)
   }
 
-  private lazy val webSocketSource: Source[Any, ActorRef] =
-    Source
-      .actorRef(
+  private def webSocketSource: Source[RequestEnvelope, ActorRef[RequestEnvelope]] =
+    ActorSource
+      .actorRef[RequestEnvelope](
         completionMatcher = {
-          case RequestEnvelope(RequestType.GameEnd, _) => CompletionStrategy.immediately
+          case RequestEnvelope(RequestType.GameEnded, _) =>
+            log.info("GameEnded")
+            system.terminate()
+            System.exit(0)
         },
-        failureMatcher = PartialFunction.empty,
+        failureMatcher = {
+          case RequestEnvelope(RequestType.Fail, _) =>
+            // should not apply to us
+            log.warning("Failed message")
+            throw new IllegalArgumentException("?????")
+        },
         bufferSize = Int.MaxValue,
         overflowStrategy = OverflowStrategy.fail
       )
 
-  private def webSocketFlow(gameId: Int,
-                            playerName: String): Flow[Message, ResponseEnvelope, Future[WebSocketUpgradeResponse]] =
+  private def webSocketFlow(gameId: Int, playerName: String): Flow[Message, ResponseEnvelope, Future[WebSocketUpgradeResponse]] =
     Http()
       .webSocketClientFlow(s"ws://192.168.0.4:8080/uno/gameId/$gameId/playerName/$playerName")
       .collect {
@@ -62,20 +82,27 @@ object Client extends JFXApp {
           decode[ResponseEnvelope](msg) match {
             case Left(error) => throw error
             case Right(responseEnvelope) =>
-              log.info("Request received: {}", responseEnvelope.responseType)
+              log.info("Incoming message: {}", responseEnvelope.`type`)
               responseEnvelope
           }
       }
 
-  private lazy val webSocketSink: Sink[ResponseEnvelope, Future[Done]] =
+  private def webSocketSink: Sink[ResponseEnvelope, Future[Done]] =
     Sink.foreach[ResponseEnvelope] {
-      requestEnvelope =>
-        requestEnvelope.responseType match {
-          case ResponseType.None => ???
-          case ResponseType.NewPlayerJoined => ???
+      responseEnvelope =>
+        responseEnvelope.`type` match {
           case ResponseType.GameJoined =>
-            log.info("HERE")
-          case ResponseType.StartGameRequested => ???
+            val response = responseEnvelope.payload.asInstanceOf[PlayerInfo]
+            runLater(controller.handleGameJoin(response.player, response.otherPlayers))
+          case ResponseType.NewPlayerJoined =>
+            runLater(controller.handlePlayerJoined(responseEnvelope.payload.asInstanceOf[PlayerInfo].player))
+          case ResponseType.PlayerLeft =>
+            runLater(controller.handlePlayerLeft(responseEnvelope.payload.asInstanceOf[PlayerInfo].player))
+          case ResponseType.CanStartGame =>
+            runLater(controller.handleStartGame(true))
+          case ResponseType.StartGameRequested =>
+            val payload = responseEnvelope.payload.asInstanceOf[StartGameRequest]
+            runLater(controller.handleStartGameRequested(payload.playerName, payload.mode))
           case ResponseType.InitiatingToss => ???
           case ResponseType.TossResult => ???
           case ResponseType.IllegalAccess => ???
@@ -90,7 +117,11 @@ object Client extends JFXApp {
   private def run(gameId: Int, playerName: String): Unit = {
     val wsConnection =
       webSocketSource
-        .map(command => TextMessage(command.asInstanceOf[RequestEnvelope].asJson.noSpaces))
+        .map {
+          command =>
+            log.info("Outgoing message: {}", command.requestType)
+            TextMessage(command.asJson.deepDropNullValues.noSpaces)
+        }
         .viaMat(webSocketFlow(gameId, playerName))(Keep.both)
         .toMat(webSocketSink)(Keep.both)
         .run()
@@ -100,23 +131,22 @@ object Client extends JFXApp {
       .onComplete {
         case Success(_) =>
           log.info("connected to server.")
+          new JFXPanel() // This will initialize the JavaFx toolkit
           runLater(showUI())
 
         case Failure(ex) =>
           log.error("onComplete.Failure", ex)
       }
-    eventualWebSocketUpgradeResponse
-      .recover {
-        case _ =>
-          log.warning("Unable to connect.")
-          system.terminate()
-          System.exit(-1)
-      }
-    ()
+    eventualWebSocketUpgradeResponse.recover {
+      case _ =>
+        log.warning("Unable to connect.")
+        system.terminate()
+        System.exit(-1)
+    }
   }
 
   private def showUI(): Unit = {
-    stage = new application.JFXApp.PrimaryStage {
+    stage = new JFXApp.PrimaryStage {
       title = "UNO"
 
       private val screen: Screen = Screen.primary
@@ -129,8 +159,15 @@ object Client extends JFXApp {
       maximized = true
 
       scene = new Scene {
+        private val topPane = new BorderPane()
+        topPane.setTop(toolsView)
+        topPane.setBottom(playersView)
         private val pane = new BorderPane()
+        pane.setTop(topPane)
+        pane.setCenter(playingAreaView)
+        pane.setBottom(Borders.wrap(cardsView).etchedBorder().build().build())
         root = pane
+        maximized = true
 
         onCloseRequest = evt => {
           val result =

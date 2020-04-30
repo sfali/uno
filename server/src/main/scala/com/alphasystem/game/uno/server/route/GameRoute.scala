@@ -70,7 +70,7 @@ class GameRoute private(gameActorRef: ActorRef[ShardingEnvelope[GameBehavior.Com
             builder.add(
               Flow[Event]
                 .map {
-                  case ResponseEvent(responseEnvelope) => TextMessage(responseEnvelope.asJson.noSpaces)
+                  case ResponseEvent(responseEnvelope) => TextMessage(responseEnvelope.asJson.deepDropNullValues.noSpaces)
 
                   case event => throw new RuntimeException(s"Invalid event: $event")
                 })

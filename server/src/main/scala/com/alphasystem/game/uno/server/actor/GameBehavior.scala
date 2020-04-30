@@ -1,11 +1,12 @@
 package com.alphasystem.game.uno.server.actor
 
-import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import akka.actor.typed._
+import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import akka.cluster.sharding.typed.ShardingEnvelope
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}
+import com.alphasystem.game.uno.model.GameType
 import com.alphasystem.game.uno.server.actor.GameBehavior.Command
-import com.alphasystem.game.uno.server.model.game.GameStatus
+import com.alphasystem.game.uno.server.model.game.{ApprovalStatus, GameStatus}
 import com.alphasystem.game.uno.server.model.{Event, StateInfo}
 import com.alphasystem.game.uno.server.service.{DeckService, GameService}
 
@@ -22,6 +23,7 @@ class GameBehavior private(context: ActorContext[Command],
   import GameBehavior._
 
   private val gameService = GameService(gameId, deckService)
+  private var playersMap: Map[String, Boolean] = Map.empty[String, Boolean].withDefaultValue(false)
 
   context.setReceiveTimeout(1 minute, Idle)
   context.log.info("Starting game: {}", gameId)
@@ -63,8 +65,8 @@ class GameBehavior private(context: ActorContext[Command],
     Behaviors.receiveMessagePartial {
       case JoinGame(name, replyTo) => joinGame(name, replyTo)
 
-      case StartGame(name) =>
-        context.self ! StartGame(name)
+      case StartGame(name, mode) =>
+        context.self ! StartGame(name, mode)
         startGame
 
       case GetState(replyTo) =>
@@ -75,6 +77,7 @@ class GameBehavior private(context: ActorContext[Command],
         context.log.warn("Player {} is left the game in 'joinGame'", name)
         // simply remove player from the list
         gameService.removePlayer(name)
+        playersMap -= name
         Behaviors.same
 
       case Fail(name, ex) =>
@@ -100,17 +103,21 @@ class GameBehavior private(context: ActorContext[Command],
     Behaviors.receiveMessagePartial[Command] {
       case JoinGame(name, replyTo) =>
         // we will still let the people get into the game
-        joinGame(name, replyTo, startTriggered = true)
+        joinGame(name, replyTo)
 
-      case StartGame(name) =>
+      case StartGame(name, mode) =>
         // There is a indication to start game.
         // If we reached max capacity, then start the game
         // Otherwise ask other players for their consent
-        if (gameService.state.reachedCapacity) {
+        if (!gameService.state.hasMinimumCapacity) {
+          // start game request came but minimum capacity hasn't reached
+          gameService.illegalAccess(name)
+          joinGame
+        } else if (gameService.state.reachedCapacity) {
           // TODO: start with toss to find who would start the game
           Behaviors.same
         } else {
-          gameService.startGame(name)
+          gameService.startGame(name, mode)
           timer.startSingleTimer(WaitForConfirmations.getClass.getSimpleName, WaitForConfirmations, 30 seconds)
           startGameApprovals
         }
@@ -149,13 +156,25 @@ class GameBehavior private(context: ActorContext[Command],
         context.log.warn("Waited for 30 seconds for start game approvals but not all confirmations arrived")
         joinGame
 
+      case ConfirmationApproval(name, _) if !playersMap.contains(name) =>
+        context.log.warn("Invalid request for ConfirmationApproval from unknown player: {}", name)
+        Behaviors.same
+
       case ConfirmationApproval(name, approved) =>
-        if (gameService.startGameApprovals(name, approved)) {
-          context.log.info("Start game request approved")
-          timer.cancel(WaitForConfirmations.getClass.getSimpleName)
-          context.self ! NotifyStartGame
-          performToss
-        } else Behaviors.same
+        val approvalStatus = gameService.startGameApprovals(name, approved)
+        approvalStatus match {
+          case ApprovalStatus.Approved =>
+            context.log.info("Start game request approved")
+            timer.cancel(WaitForConfirmations.getClass.getSimpleName)
+            context.self ! NotifyStartGame
+            performToss
+          case ApprovalStatus.Rejected =>
+            context.log.info("Start game request rejected")
+            timer.cancel(WaitForConfirmations.getClass.getSimpleName)
+            gameService.sendCanStartGameMessage()
+            joinGame
+          case ApprovalStatus.Waiting => Behaviors.same
+        }
 
       case GetState(replyTo) =>
         replyTo ! StateInfo(gameService.state)
@@ -265,20 +284,16 @@ class GameBehavior private(context: ActorContext[Command],
         Behaviors.same
     }
 
-  private def joinGame(name: String,
-                       replyTo: ActorRef[Event],
-                       startTriggered: Boolean = false) = {
+  private def joinGame(name: String, replyTo: ActorRef[Event]) = {
     val state = gameService.state
     if (state.reachedCapacity) {
       context.log.info("HERE")
       // TODO: reply with sorry
       Behaviors.same[Command]
     } else {
-      val reachedCapacity = gameService.joinGame(name, replyTo)
-      if (reachedCapacity && !startTriggered) {
-        context.self ! StartGame(state.players.head.name)
-        startGame
-      } else Behaviors.same[Command]
+      gameService.joinGame(name, replyTo)
+      playersMap += (name -> true)
+      Behaviors.same[Command]
     }
   }
 
@@ -329,7 +344,7 @@ object GameBehavior {
 
   final case class JoinGame(name: String, replyTo: ActorRef[Event]) extends GameCommand
 
-  final case class StartGame(name: String) extends GameCommand
+  final case class StartGame(name: String, mode: GameType) extends GameCommand
 
   final case object WaitForConfirmations extends Command
 
