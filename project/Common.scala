@@ -13,7 +13,7 @@ object Common extends AutoPlugin {
   		Seq (
   		 organization := "com.alphasystem.game.uno",
         organizationName := "Alphasystem",
-        scalaVersion := "2.13.1",
+        scalaVersion := "2.13.2",
         scalacOptions ++= Seq(
           "-encoding",
           "UTF-8",
