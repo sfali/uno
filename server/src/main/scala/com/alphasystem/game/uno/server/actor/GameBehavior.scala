@@ -1,7 +1,7 @@
 package com.alphasystem.game.uno.server.actor
 
-import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import akka.actor.typed._
+import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors, StashBuffer, TimerScheduler}
 import akka.cluster.sharding.typed.ShardingEnvelope
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}
 import com.alphasystem.game.uno.model.GameType
@@ -101,7 +101,7 @@ class GameBehavior private(context: ActorContext[Command],
     Behaviors.receiveMessagePartial[Command] {
       case JoinGame(name, replyTo) =>
         // we will still let the people get into the game
-        joinGame(name, replyTo, startTriggered = true)
+        joinGame(name, replyTo)
 
       case StartGame(name, mode) =>
         // There is a indication to start game.
@@ -270,20 +270,15 @@ class GameBehavior private(context: ActorContext[Command],
         Behaviors.same
     }
 
-  private def joinGame(name: String,
-                       replyTo: ActorRef[Event],
-                       startTriggered: Boolean = false) = {
+  private def joinGame(name: String, replyTo: ActorRef[Event]) = {
     val state = gameService.state
     if (state.reachedCapacity) {
       context.log.info("HERE")
       // TODO: reply with sorry
       Behaviors.same[Command]
     } else {
-      val reachedCapacity = gameService.joinGame(name, replyTo)
-      if (reachedCapacity && !startTriggered) {
-        context.self ! StartGame(state.players.head.name, GameType.Classic) // TODO:
-        startGame
-      } else Behaviors.same[Command]
+      gameService.joinGame(name, replyTo)
+      Behaviors.same[Command]
     }
   }
 
