@@ -6,7 +6,7 @@ import akka.cluster.sharding.typed.ShardingEnvelope
 import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity, EntityTypeKey}
 import com.alphasystem.game.uno.model.GameType
 import com.alphasystem.game.uno.server.actor.GameBehavior.Command
-import com.alphasystem.game.uno.server.model.game.GameStatus
+import com.alphasystem.game.uno.server.model.game.{ApprovalStatus, GameStatus}
 import com.alphasystem.game.uno.server.model.{Event, StateInfo}
 import com.alphasystem.game.uno.server.service.{DeckService, GameService}
 
@@ -23,6 +23,7 @@ class GameBehavior private(context: ActorContext[Command],
   import GameBehavior._
 
   private val gameService = GameService(gameId, deckService)
+  private var playersMap: Map[String, Boolean] = Map.empty[String, Boolean].withDefaultValue(false)
 
   context.setReceiveTimeout(1 minute, Idle)
   context.log.info("Starting game: {}", gameId)
@@ -76,6 +77,7 @@ class GameBehavior private(context: ActorContext[Command],
         context.log.warn("Player {} is left the game in 'joinGame'", name)
         // simply remove player from the list
         gameService.removePlayer(name)
+        playersMap -= name
         Behaviors.same
 
       case Fail(name, ex) =>
@@ -154,13 +156,25 @@ class GameBehavior private(context: ActorContext[Command],
         context.log.warn("Waited for 30 seconds for start game approvals but not all confirmations arrived")
         joinGame
 
+      case ConfirmationApproval(name, _) if !playersMap.contains(name) =>
+        context.log.warn("Invalid request for ConfirmationApproval from unknown player: {}", name)
+        Behaviors.same
+
       case ConfirmationApproval(name, approved) =>
-        if (gameService.startGameApprovals(name, approved)) {
-          context.log.info("Start game request approved")
-          timer.cancel(WaitForConfirmations.getClass.getSimpleName)
-          context.self ! NotifyStartGame
-          performToss
-        } else Behaviors.same
+        val approvalStatus = gameService.startGameApprovals(name, approved)
+        approvalStatus match {
+          case ApprovalStatus.Approved =>
+            context.log.info("Start game request approved")
+            timer.cancel(WaitForConfirmations.getClass.getSimpleName)
+            context.self ! NotifyStartGame
+            performToss
+          case ApprovalStatus.Rejected =>
+            context.log.info("Start game request rejected")
+            timer.cancel(WaitForConfirmations.getClass.getSimpleName)
+            gameService.sendCanStartGameMessage()
+            joinGame
+          case ApprovalStatus.Waiting => Behaviors.same
+        }
 
       case GetState(replyTo) =>
         replyTo ! StateInfo(gameService.state)
@@ -278,6 +292,7 @@ class GameBehavior private(context: ActorContext[Command],
       Behaviors.same[Command]
     } else {
       gameService.joinGame(name, replyTo)
+      playersMap += (name -> true)
       Behaviors.same[Command]
     }
   }

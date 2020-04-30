@@ -4,7 +4,7 @@ import akka.actor.typed.ActorRef
 import com.alphasystem.game.uno._
 import com.alphasystem.game.uno.model.response._
 import com.alphasystem.game.uno.model.{Deck, GameType, Player}
-import com.alphasystem.game.uno.server.model.game.{GameState, GameStatus, PlayDirection}
+import com.alphasystem.game.uno.server.model.game.{ApprovalStatus, GameState, GameStatus, PlayDirection}
 import com.alphasystem.game.uno.server.model.{Event, ResponseEvent}
 import org.slf4j.LoggerFactory
 
@@ -14,7 +14,7 @@ class GameService(gameId: Int, deckService: DeckService) {
   private var _state = GameState(gameId)
   private var gameMode: GameType = GameType.Classic
   private var playerToActorRefs = Map.empty[String, ActorRef[Event]]
-  private var confirmationApprovals = Map.empty[String, Boolean].withDefaultValue(false)
+  private var confirmationApprovals = Map.empty[String, Boolean]
   private var currentDeck: Deck = deckService.create()
 
   def removePlayer(name: String): Unit = {
@@ -48,12 +48,16 @@ class GameService(gameId: Int, deckService: DeckService) {
           actorRef ! event
       }
     log.info("Player '{}' is joined", name)
+    sendCanStartGameMessage()
+    _state.reachedCapacity
+  }
+
+  def sendCanStartGameMessage(): Unit = {
     if (_state.numOfPlayer == MinNumberOfPlayers) {
-      // game has now two players, signal the first player to start game
+      // game has now at least two players, signal the first player to start game
       val playerName = _state.player(0).name
       playerToActorRefs(playerName) ! ResponseEvent(ResponseEnvelope(ResponseType.CanStartGame, Empty()))
     }
-    _state.reachedCapacity
   }
 
   def startGame(playerName: String, mode: GameType): Unit = {
@@ -70,17 +74,22 @@ class GameService(gameId: Int, deckService: DeckService) {
     }
   }
 
-  def startGameApprovals(name: String, approved: Boolean): Boolean =
+  def startGameApprovals(name: String, approved: Boolean): ApprovalStatus =
     _state.player(name) match {
       case Some(playerDetail) =>
         val s = if (approved) "approved " else "rejected"
         log.info("Start game request is {} by {}", s, name)
         confirmationApprovals += (playerDetail.name -> approved)
-        val acceptedCount = confirmationApprovals.count(_._2 == true).toDouble
-        val approvalPercentage = (acceptedCount / playerToActorRefs.size) * 100
-        approvalPercentage >= 50.0
+        // do not count the player who initiated the start game request
+        if (confirmationApprovals.size >= _state.numOfPlayer - 1) {
+          val acceptedCount = confirmationApprovals.count(_._2 == true).toDouble
+          val approvalPercentage = (acceptedCount / playerToActorRefs.size) * 100
+          if (approvalPercentage >= 50.0) ApprovalStatus.Approved else ApprovalStatus.Rejected
+        } else ApprovalStatus.Waiting
 
-      case None => false
+      case None =>
+        // should not happen actor must handled this scenario already
+        throw new IllegalArgumentException(s"Unknown player: $name")
     }
 
   def notifyGameStart(): Unit = {
