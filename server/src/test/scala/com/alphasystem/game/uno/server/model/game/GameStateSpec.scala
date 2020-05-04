@@ -1,6 +1,5 @@
 package com.alphasystem.game.uno.server.model.game
 
-import com.alphasystem.game.uno.model.response.TossResult
 import com.alphasystem.game.uno.model.{Card, CardEntry, Color, Deck}
 import com.alphasystem.game.uno.server.service._
 import com.alphasystem.game.uno.test._
@@ -134,7 +133,7 @@ class GameStateSpec
       Card(Color.Green, CardEntry.Nine) :: Card(Color.Red, CardEntry.Eight) :: Card(Color.Green, CardEntry.Five) :: Nil
     val (tossResult, winners) = performToss(gameState, Deck(initialCards), gameState.players.zipWithIndex.map(_._2).toList)
     winners shouldBe 1 :: Nil
-    tossResult shouldBe TossResult(toCards(initialCards, gameState.players))
+    tossResult shouldBe toCards(initialCards, gameState.players)
   }
 
   "Perform toss with a multiple winners" in {
@@ -145,10 +144,10 @@ class GameStateSpec
     val (tossResult, winners) = performToss(gameState, deck, gameState.players.zipWithIndex.map(_._2).toList)
     val expectedWinners = 0 :: 1 :: Nil
     winners shouldBe expectedWinners
-    tossResult shouldBe TossResult(toCards(initialCards.dropRight(2), gameState.players))
+    tossResult shouldBe toCards(initialCards.dropRight(2), gameState.players)
 
     val (tossResult1, winners1) = performToss(gameState, deck, expectedWinners)
     winners1 shouldBe 0 :: Nil
-    tossResult1 shouldBe TossResult(toCards(initialCards.takeRight(2), gameState.players))
+    tossResult1 shouldBe toCards(initialCards.takeRight(2), gameState.players)
   }
 }

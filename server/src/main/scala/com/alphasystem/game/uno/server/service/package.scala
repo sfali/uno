@@ -1,8 +1,8 @@
 package com.alphasystem.game.uno.server
 
-import com.alphasystem.game.uno.server.model.game.GameState
-import com.alphasystem.game.uno.model.response.{Cards, TossResult}
+import com.alphasystem.game.uno.model.response.Cards
 import com.alphasystem.game.uno.model.{Card, CardEntry, Deck}
+import com.alphasystem.game.uno.server.model.game.GameState
 
 package object service {
 
@@ -18,12 +18,12 @@ package object service {
    * @param state     current game state
    * @param deck      current deck
    * @param positions index of the players
-   * @return a tuple, where first element contains [[TossResult]], and second
+   * @return a tuple, where first element contains [[List[Card]], and second
    *         element containing List of player position with highest card
    */
   def performToss(state: GameState,
                   deck: Deck,
-                  positions: List[Int]): (TossResult, List[Int]) = {
+                  positions: List[Int]): (List[Cards], List[Int]) = {
     // draw cards
     val drawnCards =
       positions
@@ -32,7 +32,7 @@ package object service {
         }.toMap
 
     // payload
-    val cards =
+    val cards: List[Cards] =
       drawnCards
         .foldLeft(List[Cards]()) {
           case (ls, (position, card)) =>
@@ -43,7 +43,7 @@ package object service {
     val (position, maxCard) = highestValueCard(drawnCards)
     val duplicates = findDuplicates(drawnCards)
 
-    (TossResult(cards), duplicates.getOrElse(maxCard.card, position :: Nil))
+    (cards, duplicates.getOrElse(maxCard.card, position :: Nil))
   }
 
   /* Card with highest value in the drawn cards */

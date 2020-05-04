@@ -110,10 +110,11 @@ class GameService(gameId: Int, deckService: DeckService) {
         case _ => positions
       }
     log.info("Performing toss: {}", _positions.mkString(","))
-    val (tossResult, winners) = performToss(state, currentDeck, _positions)
+    val (cards, winners) = performToss(state, currentDeck, _positions)
+    val winningPlayers = winners.map(_state.player).map(_.name)
     playerToActorRefs
       .foreach {
-        case (_, actorRef) => actorRef ! ResponseEvent(ResponseEnvelope(ResponseType.TossResult, tossResult))
+        case (_, actorRef) => actorRef ! ResponseEvent(ResponseEnvelope(ResponseType.TossResult, TossResult(cards, winningPlayers)))
       }
     if (winners.length == 1) {
       // winner is the player who would start the round, we need to find the dealer, who would be the player

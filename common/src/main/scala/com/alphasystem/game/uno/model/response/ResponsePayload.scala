@@ -34,13 +34,13 @@ object Cards {
   }
 }
 
-final case class TossResult(cards: List[Cards]) extends ResponsePayload
+final case class TossResult(cards: List[Cards], winners: List[String]) extends ResponsePayload
 
 object ResponsePayload {
 
   implicit val ResponsePayloadEncoder: Encoder[ResponsePayload] =
     Encoder.instance {
-      case event@TossResult(_) => event.asJson
+      case event@TossResult(_, _) => event.asJson
       case event@StartGameRequest(_, _) => event.asJson
       case event@PlayerInfo(_, _) => event.asJson
       case event@ChatMessage(_, _) => event.asJson

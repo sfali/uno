@@ -58,7 +58,7 @@ class EncoderDecoderSpec
 
     it("should encode and decode GameMode payload") {
       val responseEnvelope = ResponseEnvelope(ResponseType.StartGameRequested, response.StartGameRequest("player1", GameType.Classic))
-      val json = """{"type":"start-game-requested","payload":{"type":"Classic"}}"""
+      val json = """{"type":"start-game-requested","payload":{"playerName":"player1","mode":"Classic"}}"""
       validateResponseEnvelopeEncoding(responseEnvelope, json)
       validateResponseEnvelopeDecoding(responseEnvelope, json)
     }
@@ -81,7 +81,7 @@ class EncoderDecoderSpec
     it("should encode and decode TossResult payload") {
       val cards = Cards(Some("Player1"), Card(Color.Yellow, CardEntry.Six) :: Nil) ::
         Cards(Some("Player2"), Card(Color.Red, CardEntry.Nine) :: Nil) :: Nil
-      val responseEnvelope = ResponseEnvelope(ResponseType.TossResult, response.TossResult(cards))
+      val responseEnvelope = ResponseEnvelope(ResponseType.TossResult, response.TossResult(cards, "Player2" :: Nil))
       val json =
         """{
           |"type":"toss-result",
@@ -89,8 +89,7 @@ class EncoderDecoderSpec
           |"cards":[
           |{"playerName":"Player1","cards":[{"color":"Yellow","card":"Six"}]},
           |{"playerName":"Player2","cards":[{"color":"Red","card":"Nine"}]}
-          |]
-          |}
+          |],"winners":["Player2"]}
           |}""".stripMargin.replaceAll(System.lineSeparator(), "")
       println(json)
       validateResponseEnvelopeEncoding(responseEnvelope, json)

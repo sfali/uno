@@ -156,7 +156,8 @@ class GameSpec
         Cards(Some("Player3"), Card(Color.Red, CardEntry.Eight) :: Nil) ::
         Cards(Some("Player4"), Card(Color.Yellow, CardEntry.Two) :: Nil) ::
         Cards(Some("Player5"), Card(Color.Yellow, CardEntry.Eight) :: Nil) ::
-        Nil)
+        Nil,
+      "Player3" :: "Player5" :: Nil)
     var responseEnvelope = ResponseEnvelope(ResponseType.TossResult, tossResult)
     clients.foreach(client => client.expectNoMessage(3.seconds))
     clients.foreach(client => client.expectMessage(responseEnvelope.asJson.deepDropNullValues.noSpaces))
@@ -164,7 +165,7 @@ class GameSpec
     tossResult = TossResult(
       Cards(Some("Player3"), Card(Color.Yellow, CardEntry.Six) :: Nil) ::
         Cards(Some("Player5"), Card(Color.Green, CardEntry.Six) :: Nil) ::
-        Nil)
+        Nil, "Player3" :: "Player5" :: Nil)
     responseEnvelope = ResponseEnvelope(ResponseType.TossResult, tossResult)
     clients.foreach(client => client.expectNoMessage(3.seconds))
     clients(2).expectMessage(responseEnvelope.asJson.deepDropNullValues.noSpaces)
@@ -173,7 +174,7 @@ class GameSpec
     tossResult = TossResult(
       Cards(Some("Player3"), Card(Color.Green, CardEntry.Two) :: Nil) ::
         Cards(Some("Player5"), Card(Color.Yellow, CardEntry.DrawTwo) :: Nil) ::
-        Nil)
+        Nil, "Player5" :: Nil)
     responseEnvelope = ResponseEnvelope(ResponseType.TossResult, tossResult)
     clients.foreach(client => client.expectNoMessage(3.seconds))
     clients(2).expectMessage(responseEnvelope.asJson.deepDropNullValues.noSpaces)
