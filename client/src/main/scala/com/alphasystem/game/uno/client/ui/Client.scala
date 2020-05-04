@@ -10,7 +10,7 @@ import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.stream.typed.scaladsl.ActorSource
 import com.alphasystem.game.uno.client.ui.control.{CardsView, PlayersView, PlayingAreaView, ToolsView}
 import com.alphasystem.game.uno.model.request.{RequestEnvelope, RequestType}
-import com.alphasystem.game.uno.model.response.{PlayerInfo, ResponseEnvelope, ResponseType, StartGameRequest}
+import com.alphasystem.game.uno.model.response.{PlayerInfo, ResponseEnvelope, ResponseType, StartGameRequest, TossResult}
 import io.circe.parser._
 import io.circe.syntax._
 import org.controlsfx.tools.Borders
@@ -43,7 +43,9 @@ object Client extends JFXApp {
 
   private lazy val playingAreaView = PlayingAreaView()
 
-  private lazy val controller = UIController(stage, inputSource, playersView, toolsView)
+  private lazy val mainPane = new BorderPane()
+
+  private lazy val controller = UIController(stage, inputSource, mainPane, playersView, toolsView)
 
   showInputDialog match {
     case Some(playerName) =>
@@ -104,7 +106,9 @@ object Client extends JFXApp {
             val payload = responseEnvelope.payload.asInstanceOf[StartGameRequest]
             runLater(controller.handleStartGameRequested(payload.playerName, payload.mode))
           case ResponseType.InitiatingToss => runLater(controller.handleTossInitiated())
-          case ResponseType.TossResult => ???
+          case ResponseType.TossResult =>
+            val payload = responseEnvelope.payload.asInstanceOf[TossResult]
+            runLater(controller.handleTossResult(payload.cards))
           case ResponseType.IllegalAccess => ???
           case ResponseType.InformationMessage => ???
           case ResponseType.ConfirmationMessage => ???
@@ -161,11 +165,10 @@ object Client extends JFXApp {
         private val topPane = new BorderPane()
         topPane.setTop(toolsView)
         topPane.setBottom(playersView)
-        private val pane = new BorderPane()
-        pane.setTop(topPane)
-        pane.setCenter(playingAreaView)
-        pane.setBottom(Borders.wrap(cardsView).etchedBorder().build().build())
-        root = pane
+        mainPane.setTop(topPane)
+        mainPane.setCenter(playingAreaView)
+        mainPane.setBottom(Borders.wrap(cardsView).etchedBorder().build().build())
+        root = mainPane
         maximized = true
 
         onCloseRequest = evt => {

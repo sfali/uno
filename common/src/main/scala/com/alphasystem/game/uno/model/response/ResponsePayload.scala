@@ -5,6 +5,8 @@ import com.alphasystem.game.uno.model.{Card, GameType, Player}
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.syntax._
+import java.util.{List => JList}
+import scala.jdk.CollectionConverters._
 
 sealed trait ResponsePayload
 
@@ -21,6 +23,16 @@ final case class StartGameRequest(playerName: String, mode: GameType) extends Re
 final case class ChatMessage(playerName: String, message: String) extends ResponsePayload
 
 final case class Cards(playerName: Option[String] = None, cards: List[Card]) extends ResponsePayload
+
+object Cards {
+  /*
+  * Java API
+  */
+  def create(playerName: String, cards: JList[Card]): Cards = {
+    val maybePlayerName = if (Option(playerName).isEmpty || playerName.trim.isEmpty) None else Some(playerName)
+    new Cards(maybePlayerName, cards.asScala.toList)
+  }
+}
 
 final case class TossResult(cards: List[Cards]) extends ResponsePayload
 

@@ -1,8 +1,9 @@
 package com.alphasystem.game.uno.client.ui
 
 import akka.actor.typed.ActorRef
-import com.alphasystem.game.uno.client.ui.control.{GameModeSelectionDialog, PlayersView, ToolsView}
+import com.alphasystem.game.uno.client.ui.control.{GameModeSelectionDialog, PlayersView, ToolsView, TossResultView}
 import com.alphasystem.game.uno.model.request._
+import com.alphasystem.game.uno.model.response.Cards
 import com.alphasystem.game.uno.model.{GameType, Player, PlayerDetail}
 import javafx.animation.{KeyFrame => JKeyFrame}
 import javafx.event.ActionEvent
@@ -13,10 +14,12 @@ import scalafx.animation.{KeyFrame, Timeline}
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control.{Alert, ButtonType}
+import scalafx.scene.layout.BorderPane
 import scalafx.stage.Modality
 
 class UIController(stage: PrimaryStage,
                    inputSource: ActorRef[RequestEnvelope],
+                   mainPane: BorderPane,
                    playersView: PlayersView,
                    toolsView: ToolsView) {
 
@@ -98,6 +101,23 @@ class UIController(stage: PrimaryStage,
       .showInformation()
   }
 
+  def handleTossResult(cards: List[Cards]): Unit = {
+    val tossResultView = TossResultView(myPlayer)
+    cards
+      .sliding(3, 3)
+      .zipWithIndex
+      .foreach {
+        case (cards, index) =>
+          index match {
+            case 0 => tossResultView.cardsRow1.addAll(cards: _*)
+            case 1 => tossResultView.cardsRow2.addAll(cards: _*)
+            case 2 => tossResultView.cardsRow3.addAll(cards: _*)
+            case _ => // not applicable
+          }
+      }
+    mainPane.setCenter(tossResultView)
+  }
+
   private def notifyPlayerMovement(player: Player, joined: Boolean = true): Unit = {
     if (playersView.numberOfPlayers <= 1) {
       toolsView.enableStartGameButton = false
@@ -139,6 +159,7 @@ class UIController(stage: PrimaryStage,
 object UIController {
   def apply(stage: PrimaryStage,
             inputSource: ActorRef[RequestEnvelope],
-            gameView: PlayersView,
-            toolsView: ToolsView): UIController = new UIController(stage, inputSource, gameView, toolsView)
+            mainPane: BorderPane,
+            playersView: PlayersView,
+            toolsView: ToolsView): UIController = new UIController(stage, inputSource, mainPane, playersView, toolsView)
 }

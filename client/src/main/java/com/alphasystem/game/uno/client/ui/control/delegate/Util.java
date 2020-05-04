@@ -11,8 +11,8 @@ public final class Util {
     public static final String SYSTEM_FONT_NAME = "Candara";
     public static final Font FONT_NORMAL = Font.font(SYSTEM_FONT_NAME, 12);
     public static final Font FONT_BOLD = Font.font(SYSTEM_FONT_NAME, FontWeight.BOLD, 12);
-    public static final Font FONT_TITLE_INACTIVE = Font.font(SYSTEM_FONT_NAME, 14);
-    public static final Font FONT_TITLE_ACTIVE = Font.font(SYSTEM_FONT_NAME, FontWeight.BOLD, 14);
+    public static final Font FONT_TITLE_INACTIVE = Font.font(SYSTEM_FONT_NAME, 16);
+    public static final Font FONT_TITLE_ACTIVE = Font.font(SYSTEM_FONT_NAME, FontWeight.BOLD, 16);
     private static final int WIDTH = 242;
     private static final int HEIGHT = 362;
 
