@@ -69,6 +69,7 @@ class UIController(stage: PrimaryStage,
   }
 
   def handleStartGameRequested(playerName: String, mode: GameType): Unit = {
+    this.gameType = mode
     val acceptButton = new ButtonType("Accept")
     val rejectButton = new ButtonType("Reject")
     val alert = new Alert(AlertType.Confirmation) {
@@ -83,6 +84,20 @@ class UIController(stage: PrimaryStage,
     sendStartGameReply(result.contains(acceptButton))
   }
 
+  def handleTossInitiated(): Unit = {
+    Notifications
+      .create()
+      .position(Pos.TOP_RIGHT)
+      .title("Initiating Toss")
+      .text(s"In order to determine who would start the first round,$NEW_LINE one card will be " +
+        s"drawn for each player.${NEW_LINE}The player with the card with highest value(*) will start the first round," +
+        s" for each subsequent round play will move clockwise.${NEW_LINE}In case for tie among two or more players, " +
+        s"toss will be done among those players." +
+        s"$NEW_LINE* The cards 0 - 9 has values according to their face values," +
+        s" action cards word 20 points each while wild cards worth 50 points each.")
+      .showInformation()
+  }
+
   private def notifyPlayerMovement(player: Player, joined: Boolean = true): Unit = {
     if (playersView.numberOfPlayers <= 1) {
       toolsView.enableStartGameButton = false
@@ -92,7 +107,7 @@ class UIController(stage: PrimaryStage,
       val text = if (joined) s"${player.name} has joined the game." else s"${player.name} has left the game."
       Notifications
         .create
-        .position(Pos.CENTER)
+        .position(Pos.TOP_RIGHT)
         .hideAfter(Duration.seconds(5))
         .title(title)
         .text(text)

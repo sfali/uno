@@ -103,7 +103,7 @@ object Client extends JFXApp {
           case ResponseType.StartGameRequested =>
             val payload = responseEnvelope.payload.asInstanceOf[StartGameRequest]
             runLater(controller.handleStartGameRequested(payload.playerName, payload.mode))
-          case ResponseType.InitiatingToss => ???
+          case ResponseType.InitiatingToss => runLater(controller.handleTossInitiated())
           case ResponseType.TossResult => ???
           case ResponseType.IllegalAccess => ???
           case ResponseType.InformationMessage => ???
