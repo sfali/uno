@@ -12,6 +12,9 @@ object Dependencies {
   private val ScalatestVersion = "3.3.0-SNAP2"
   private val ScalacheckVersion = "1.14.3"
   private val LogbackVersion = "1.2.3"
+  private val JavaFxVersion = "14.0.1"
+  private val ScalaFxVersion = "12.0.2-R18"
+  private val ControlsFxVersion = "11.0.1"
   private val ComTypesafeAkka = "com.typesafe.akka"
   private val IoCirce = "io.circe"
   private val ComBeachape = "com.beachape"
@@ -19,8 +22,11 @@ object Dependencies {
   private val OrgScalatest = "org.scalatest"
   private val OrgScalacheck = "org.scalacheck"
   private val ChQosLogback = "ch.qos.logback"
+  private val OrgOpenJfx = "org.openjfx"
+  private val OrgScalaFx = "org.scalafx"
+  private val OrgControlsFx = "org.controlsfx"
 
-  val Common = Seq(
+  val Common: Seq[Setting[Seq[ModuleID]]] = Seq(
     // These libraries are added to all modules via the `Common` AutoPlugin
     libraryDependencies ++= Seq(
       ComTypesafeAkka     %% "akka-actor-typed"    % AkkaVersion,
@@ -39,7 +45,7 @@ object Dependencies {
     )
   )
 
-  val Server = Seq(
+  val Server: Seq[Setting[Seq[ModuleID]]] = Seq(
     libraryDependencies ++= Seq(
       DeHeikoseeberger    %% "akka-http-circe"             % AkkaHttpCirceVersion,
       ComTypesafeAkka     %% "akka-cluster-sharding-typed" % AkkaVersion,
@@ -47,10 +53,25 @@ object Dependencies {
     )
   )
 
-  val Client = Seq (
+
+  val JavaFx: Seq[Setting[Seq[ModuleID]]] = {
+    // Add OS specific JavaFX dependencies
+    val osName = System.getProperty("os.name") match {
+      case n if n.startsWith("Linux") => "linux"
+      case n if n.startsWith("Mac") => "mac"
+      case n if n.startsWith("Windows") => "win"
+      case _ => throw new Exception("Unknown platform!")
+    }
+    val javafxModules = Seq("base", "controls", "fxml", "graphics", "media", "swing", "web").map(module => s"javafx-$module")
+    Seq(
+      libraryDependencies ++= javafxModules.map(moduleName => OrgOpenJfx % moduleName % JavaFxVersion classifier osName)
+    )
+  }
+
+  val Client: Seq[Setting[Seq[ModuleID]]] = Seq(
     libraryDependencies ++= Seq(
-      "org.scalafx"      %% "scalafx"     % "12.0.2-R18",
-      "org.controlsfx"   %  "controlsfx"  % "8.40.16"
+      OrgScalaFx     %% "scalafx"     % ScalaFxVersion,
+      OrgControlsFx  % "controlsfx"   % ControlsFxVersion
     )
   )
 }

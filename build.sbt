@@ -7,7 +7,7 @@ lazy val server = createProject("server", "server", Server)
   .dependsOn(common)
   .enablePlugins(JavaAppPackaging)
 
-lazy val client = createProject("client", "client", Client)
+lazy val client = createProject("client", "client", JavaFx, Client)
   .aggregate(common)
   .dependsOn(common)
   .enablePlugins(JavaAppPackaging)

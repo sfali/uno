@@ -23,7 +23,7 @@ object Common extends AutoPlugin {
           //"-Xfatal-warnings",
           "-Xlint",
           "-Ywarn-dead-code",
-          "-target:jvm-1.8"
+          "-target:jvm-11"
         ),
         javacOptions in compile ++= Seq(
           "-Xlint:unchecked"
