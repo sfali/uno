@@ -101,8 +101,9 @@ class UIController(stage: PrimaryStage,
       .showInformation()
   }
 
-  def handleTossResult(cards: List[Cards]): Unit = {
+  def handleTossResult(cards: List[Cards], winners: List[String]): Unit = {
     val tossResultView = TossResultView(myPlayer)
+    tossResultView.winners.addAll(winners: _*)
     cards
       .sliding(3, 3)
       .zipWithIndex
@@ -115,6 +116,15 @@ class UIController(stage: PrimaryStage,
             case _ => // not applicable
           }
       }
+    winners match {
+      case head :: Nil =>
+        // single winner
+        notifySingleWinnerToss(head)
+      case _ :: _ :: xs =>
+      // multiple winner
+      //TODO:
+      case Nil => // do nothing
+    }
     mainPane.setCenter(tossResultView)
   }
 
@@ -135,6 +145,36 @@ class UIController(stage: PrimaryStage,
     }
   }
 
+  private def notifySingleWinnerToss(playerName: String): Unit = {
+    val isMyPlayer = myPlayer.name.equals(playerName)
+    val title = "Toss Result"
+    val prefix =
+      if (isMyPlayer) "Congratulation! you"
+      else s"Player $playerName"
+    val text = s"$prefix will start the first round. Please wait for your cards to get distributed."
+    val notification =
+      Notifications
+        .create
+        .position(Pos.TOP_RIGHT)
+        .hideAfter(Duration.seconds(5))
+        .title(title)
+        .text(text)
+    delayedRequest(1, () => notification.showInformation())
+  }
+
+  private def notifyMultipleWinners(playerNames: List[String]): Unit = {
+    val s =
+      playerNames match {
+        case Nil =>
+          // should not happen
+          ""
+        case first :: second :: Nil => s"between $first and $second"
+        case _ =>
+
+      }
+    var text = "Toss has tied"
+  }
+
   // Outgoing requests
 
   private def sendStartGameRequest(gameType: GameType): Unit =
@@ -148,8 +188,16 @@ class UIController(stage: PrimaryStage,
   private def initiateDelayedRequest(requestType: RequestType,
                                      payload: RequestPayload,
                                      duration: Double = 5): Unit = {
-    val delegate = new JKeyFrame(Duration.seconds(duration),
+    /*val delegate = new JKeyFrame(Duration.seconds(duration),
       (_: ActionEvent) => inputSource ! RequestEnvelope(requestType, payload))
+    val timeline = new Timeline(2000)
+    timeline.keyFrames = Seq(new KeyFrame(delegate))
+    timeline.play()*/
+    delayedRequest(duration, () => inputSource ! RequestEnvelope(requestType, payload))
+  }
+
+  private def delayedRequest(duration: Double, request: () => Unit): Unit = {
+    val delegate = new JKeyFrame(Duration.seconds(duration), (_: ActionEvent) => request())
     val timeline = new Timeline(2000)
     timeline.keyFrames = Seq(new KeyFrame(delegate))
     timeline.play()

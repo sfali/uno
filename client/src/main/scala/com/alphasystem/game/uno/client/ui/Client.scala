@@ -108,7 +108,7 @@ object Client extends JFXApp {
           case ResponseType.InitiatingToss => runLater(controller.handleTossInitiated())
           case ResponseType.TossResult =>
             val payload = responseEnvelope.payload.asInstanceOf[TossResult]
-            runLater(controller.handleTossResult(payload.cards))
+            runLater(controller.handleTossResult(payload.cards, payload.winners))
           case ResponseType.IllegalAccess => ???
           case ResponseType.InformationMessage => ???
           case ResponseType.ConfirmationMessage => ???

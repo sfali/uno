@@ -206,7 +206,8 @@ class GameBehavior private(context: ActorContext[Command],
 
       case PerformToss(positions) =>
         gameService.toss(positions) match {
-          case _ :: Nil =>
+          case head :: Nil =>
+            context.log.info("Toss winner: {}", head)
             // single winner, we can start round
             // TODO:
             gameMode
